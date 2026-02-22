@@ -110,6 +110,7 @@ public function update(Request $request)
 
             // Guardar la imagen sin redimensionar
             $path = $request->file('profile_photo')->store('profile-photos', 'public');
+            
 
             $data['profile_photo_path'] = $path;
         }

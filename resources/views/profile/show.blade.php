@@ -31,10 +31,17 @@
                                 <div class="card-body box-profile text-center">
                                     <div class="mx-auto mb-3" style="width: 100px; height: 100px; position: relative;">
                                         <div style="width: 100%; height: 100%; border-radius: 50%; overflow: hidden; border: 2px solid #dee2e6; background-color: #f8f9fa; position: relative;">
-                                            <img class="img-fluid {{ !auth()->user()->profile_photo_path ? 'default-avatar-large' : '' }}"
-                                                 src="{{ auth()->user()->profile_photo_url }}"
-                                                 alt="User profile picture"
-                                                 style="width: 100%; height: 100%; object-fit: cover;">
+                                            @if(auth()->user()->profile_photo_path)
+                                                <img class="img-fluid"
+                                                     src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
+                                                     alt="User profile picture"
+                                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                            @else
+                                                <img class="img-fluid default-avatar-large"
+                                                     src="{{ asset('images/default-profile.png') }}"
+                                                     alt="User profile picture"
+                                                     style="width: 100%; height: 100%; object-fit: cover;">
+                                            @endif
                                         </div>
                                     </div>
 
