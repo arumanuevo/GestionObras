@@ -17,11 +17,11 @@
                 </a>
 
                 <div class="ml-auto d-flex align-items-center h-100">
-                    <a href="{{ route('login') }}" class="btn btn-outline-dark mx-2 px-3 py-1" style="border-radius: 25px; font-weight: 500; height: 40px;">
+                    <a href="{{ route('login') }}" class="btn btn-outline-dark mx-2 px-3 py-1" style="border-radius: 25px; font-weight: 500; ">
                         <i class="fas fa-sign-in-alt mr-1"></i> Iniciar Sesión
                     </a>
                     @if (Route::has('register'))
-                    <a href="{{ route('register') }}" class="btn btn-dark px-3 py-1" style="border-radius: 25px; font-weight: 500; height: 40px;">
+                    <a href="{{ route('register') }}" class="btn btn-dark px-3 py-1" style="border-radius: 25px; font-weight: 500; ">
                         <i class="fas fa-user-plus mr-1"></i> Registrarse
                     </a>
                     @endif
