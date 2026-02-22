@@ -6,8 +6,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title" style="font-weight: bold;">Panel de Seguimiento de Notas</h3>
-
+                    <h3 class="card-title">Panel de Seguimiento de Notas</h3>
                     <div class="card-tools">
                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#importModal">
                             <i class="fas fa-file-import"></i> Importar CSV
