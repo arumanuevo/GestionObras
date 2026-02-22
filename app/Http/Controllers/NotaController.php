@@ -115,63 +115,82 @@ class NotaController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'Tipo' => 'required|string|max:50',
-            'Nro' => 'required|integer',
-            'Tema' => 'required|string|max:100',
-            'texto' => 'nullable|string',
-            'fecha' => 'nullable|date',
-            'Rta_a_NP' => 'nullable|integer',
-            'Respondida_por' => 'nullable|string|max:255',
-            'Observaciones' => 'nullable|string',
-            'Estado' => 'nullable|string|max:50',
-            'link' => 'nullable|string|max:255',
-            'pdf' => 'nullable|mimes:pdf|max:20480',
-        ]);
+{
+    $validated = $request->validate([
+        'Tipo' => 'required|string|max:50',
+        'Nro' => 'required|integer',
+        'Tema' => 'required|string|max:100',
+        'texto' => 'nullable|string',
+        'fecha' => 'nullable|date',
+        'Rta_a_NP' => 'nullable|integer',
+        'Respondida_por' => 'nullable|string|max:255',
+        'Observaciones' => 'nullable|string',
+        'Estado' => 'nullable|string|max:50',
+        'link' => 'nullable|string|max:255',
+        'pdf' => 'nullable|mimes:pdf|max:20480',
+    ]);
 
-        try {
-            $data = $request->except('pdf_path_temp', 'texto_pdf_temp', 'resumen_ai_temp');
+    try {
+        $data = $request->except('pdf_path_temp', 'texto_pdf_temp', 'resumen_ai_temp');
 
-            // Crear la nota primero
-            $nota = Nota::create($data);
+        // Crear la nota primero
+        $nota = Nota::create($data);
 
-            // Si hay un PDF temporal, procesarlo
-            if ($request->has('pdf_path_temp')) {
-                $tempPath = $request->pdf_path_temp;
-                $finalFilename = 'nota_' . $nota->id . '.pdf';
+        // Si hay un PDF temporal, procesarlo
+        if ($request->has('pdf_path_temp')) {
+            $tempPath = $request->pdf_path_temp;
+            $finalFilename = 'nota_' . $nota->id . '.pdf';
 
-                // Mover el archivo de la ubicación temporal a la final
-                Storage::disk('public')->move($tempPath, 'pdfs/' . $finalFilename);
-
-                // Actualizar la nota con la ruta final del PDF y el texto extraído
-                $nota->update([
-                    'pdf_path' => 'pdfs/' . $finalFilename,
-                    'texto_pdf' => $request->texto_pdf_temp,
-                    'resumen_ai' => $request->resumen_ai_temp ?? null
-                ]);
-            } elseif ($request->hasFile('pdf')) {
-                // Si se sube un PDF directamente en el formulario (sin usar el temporal)
-                $file = $request->file('pdf');
-                $filename = 'nota_' . $nota->id . '.pdf';
-                $path = $file->storeAs('pdfs', $filename, 'public');
-
-                // Extraer el texto del PDF
-                $textoPDF = $this->extraerTextoDelPDF($file->getRealPath());
-
-                $nota->update([
-                    'pdf_path' => $path,
-                    'texto_pdf' => $textoPDF
-                ]);
+            // Eliminar el PDF temporal anterior si existe
+            $tempFilePath = public_path('storage/pdfs/temp/' . basename($tempPath));
+            if (file_exists($tempFilePath)) {
+                unlink($tempFilePath);
             }
 
-            return redirect()->route('notas.index')->with('success', 'Nota creada con éxito.');
+            // Mover el archivo de la ubicación temporal a la final
+            $finalPath = public_path('storage/pdfs/' . $finalFilename);
+            if (!file_exists(public_path('storage/pdfs'))) {
+                mkdir(public_path('storage/pdfs'), 0777, true);
+            }
 
-        } catch (\Exception $e) {
-            Log::error('Error al crear nota: ' . $e->getMessage());
-            return back()->with('error', 'Error al crear la nota: ' . $e->getMessage());
+            // Mover el archivo temporal al destino final
+            rename(public_path('storage/' . $tempPath), $finalPath);
+
+            // Actualizar la nota con la ruta final del PDF y el texto extraído
+            $nota->update([
+                'pdf_path' => 'pdfs/' . $finalFilename,
+                'texto_pdf' => $request->texto_pdf_temp,
+                'resumen_ai' => $request->resumen_ai_temp ?? null
+            ]);
+        } elseif ($request->hasFile('pdf')) {
+            // Si se sube un PDF directamente en el formulario (sin usar el temporal)
+            $file = $request->file('pdf');
+            $filename = 'nota_' . $nota->id . '.pdf';
+
+            // Asegurarse de que la carpeta exista
+            if (!file_exists(public_path('storage/pdfs'))) {
+                mkdir(public_path('storage/pdfs'), 0777, true);
+            }
+
+            // Mover el archivo a la carpeta pública
+            $file->move(public_path('storage/pdfs'), $filename);
+
+            // Extraer el texto del PDF
+            $textoPDF = $this->extraerTextoDelPDF($file->getRealPath());
+
+            $nota->update([
+                'pdf_path' => 'pdfs/' . $filename,
+                'texto_pdf' => $textoPDF
+            ]);
         }
+
+        return redirect()->route('notas.index')->with('success', 'Nota creada con éxito.');
+
+    } catch (\Exception $e) {
+        Log::error('Error al crear nota: ' . $e->getMessage());
+        return back()->with('error', 'Error al crear la nota: ' . $e->getMessage());
     }
+}
 
     public function edit(Nota $nota)
     {
@@ -193,54 +212,50 @@ class NotaController extends Controller
             'link' => 'nullable|string|max:255',
             'pdf' => 'nullable|mimes:pdf|max:20480',
         ]);
-
+    
         $data = $request->except('pdf');
-
+    
         try {
             if ($request->hasFile('pdf')) {
                 // Eliminar el PDF anterior si existe
-                if ($nota->pdf_path && Storage::disk('public')->exists($nota->pdf_path)) {
-                    Storage::disk('public')->delete($nota->pdf_path);
+                if ($nota->pdf_path) {
+                    $oldPath = public_path('storage/' . $nota->pdf_path);
+                    if (file_exists($oldPath)) {
+                        unlink($oldPath);
+                    }
                 }
-
+    
                 // Guardar el nuevo PDF
                 $file = $request->file('pdf');
                 $filename = 'nota_' . $nota->id . '.pdf';
-                $path = $file->storeAs('pdfs', $filename, 'public');
-
+    
+                // Asegurarse de que la carpeta exista
+                if (!file_exists(public_path('storage/pdfs'))) {
+                    mkdir(public_path('storage/pdfs'), 0777, true);
+                }
+    
+                // Mover el archivo a la carpeta pública
+                $file->move(public_path('storage/pdfs'), $filename);
+    
                 // Extraer el texto del PDF
                 $textoPDF = $this->extraerTextoDelPDF($file->getRealPath());
-
-                $data['pdf_path'] = $path;
+    
+                $data['pdf_path'] = 'pdfs/' . $filename;
                 $data['texto_pdf'] = $textoPDF;
             }
-
+    
             $nota->update($data);
-
+    
             return redirect()->route('notas.index')->with('success', 'Nota actualizada con éxito.');
-
+    
         } catch (\Exception $e) {
             Log::error('Error al actualizar nota: ' . $e->getMessage());
             return back()->with('error', 'Error al actualizar la nota: ' . $e->getMessage());
         }
     }
+    
 
-    public function destroy(Nota $nota)
-    {
-        try {
-            // Eliminar el PDF asociado si existe
-            if ($nota->pdf_path && Storage::disk('public')->exists($nota->pdf_path)) {
-                Storage::disk('public')->delete($nota->pdf_path);
-            }
-
-            $nota->delete();
-            return redirect()->route('notas.index')->with('success', 'Nota eliminada con éxito.');
-
-        } catch (\Exception $e) {
-            Log::error('Error al eliminar nota: ' . $e->getMessage());
-            return back()->with('error', 'Error al eliminar la nota: ' . $e->getMessage());
-        }
-    }
+    
 
     public function import(Request $request)
     {
@@ -393,34 +408,41 @@ class NotaController extends Controller
     
 
 
-    public function subirPDFTemporal(Request $request)
-    {
-        $request->validate([
-            'pdf' => 'required|mimes:pdf|max:20480',
+public function subirPDFTemporal(Request $request)
+{
+    $request->validate([
+        'pdf' => 'required|mimes:pdf|max:20480',
+    ]);
+
+    try {
+        $file = $request->file('pdf');
+        $filename = 'temp_' . Str::random(40) . '.pdf';
+
+        // Asegurarse de que la carpeta exista
+        if (!file_exists(public_path('storage/pdfs/temp'))) {
+            mkdir(public_path('storage/pdfs/temp'), 0777, true);
+        }
+
+        // Mover el archivo a la carpeta pública temporal
+        $file->move(public_path('storage/pdfs/temp'), $filename);
+
+        // Extraer el texto del PDF
+        $textoPDF = $this->extraerTextoDelPDF($file->getRealPath());
+
+        return response()->json([
+            'success' => true,
+            'texto_pdf' => $textoPDF,
+            'path' => 'pdfs/temp/' . $filename
         ]);
 
-        try {
-            $file = $request->file('pdf');
-            $filename = 'temp_' . Str::random(40) . '.pdf';
-            $path = $file->storeAs('pdfs/temp', $filename, 'public');
-
-            // Extraer el texto del PDF
-            $textoPDF = $this->extraerTextoDelPDF($file->getRealPath());
-
-            return response()->json([
-                'success' => true,
-                'texto_pdf' => $textoPDF,
-                'path' => $path
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error al subir PDF temporal: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al procesar el PDF: ' . $e->getMessage()
-            ]);
-        }
+    } catch (\Exception $e) {
+        Log::error('Error al subir PDF temporal: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al procesar el PDF: ' . $e->getMessage()
+        ]);
     }
+}
 
     public function generarResumenAITemporal(Request $request, $id = null)
 {
@@ -449,6 +471,25 @@ class NotaController extends Controller
     }
 }
 
+public function destroy(Nota $nota)
+{
+    try {
+        // Eliminar el PDF asociado si existe
+        if ($nota->pdf_path) {
+            $pdfPath = public_path('storage/' . $nota->pdf_path);
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+            }
+        }
+
+        $nota->delete();
+        return redirect()->route('notas.index')->with('success', 'Nota eliminada con éxito.');
+
+    } catch (\Exception $e) {
+        Log::error('Error al eliminar nota: ' . $e->getMessage());
+        return back()->with('error', 'Error al eliminar la nota: ' . $e->getMessage());
+    }
+}
    /* public function generarResumenAITemporal(Request $request)
     {
         $textoPDF = $request->input('texto_pdf');

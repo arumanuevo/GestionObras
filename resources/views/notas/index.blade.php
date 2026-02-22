@@ -127,11 +127,12 @@
                                         </td>
                                         <td class="text-center">
                                             @if($nota->pdf_path)
-                                                <a href="{{ Storage::url($nota->pdf_path) }}" target="_blank" class="btn btn-xs btn-outline-danger p-1" title="Ver PDF">
+                                                <a href="{{ asset('storage/' . $nota->pdf_path) }}" target="_blank" class="btn btn-xs btn-outline-danger p-1" title="Ver PDF">
                                                     <i class="fas fa-file-pdf fa-sm"></i>
                                                 </a>
                                             @endif
                                         </td>
+
                                         <td class="text-center">
                                             <button type="button" class="btn btn-xs btn-outline-purple p-1" title="Ver Resumen AI" data-toggle="modal" data-target="#resumenAIModal{{ $nota->id }}">
                                                 <i class="fas fa-robot fa-sm"></i>
