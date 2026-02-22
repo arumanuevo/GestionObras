@@ -100,7 +100,7 @@ public function update(Request $request)
         }
 
         // Manejar la foto de perfil
-        if ($request->hasFile('profile_photo')) {
+        /*if ($request->hasFile('profile_photo')) {
             if ($user->profile_photo_path) {
                 Storage::delete('public/' . $user->profile_photo_path);
             }
@@ -113,7 +113,33 @@ public function update(Request $request)
             
 
             $data['profile_photo_path'] = $path;
+        }*/
+
+        // Manejar la foto de perfil
+if ($request->hasFile('profile_photo')) {
+    if ($user->profile_photo_path) {
+        // Eliminar la imagen anterior
+        $oldPath = public_path('storage/' . $user->profile_photo_path);
+        if (file_exists($oldPath)) {
+            unlink($oldPath);
         }
+    }
+
+    $image = $request->file('profile_photo');
+    $filename = time() . '_' . $image->getClientOriginalName();
+
+    // Guardar la imagen directamente en public/storage/profile-photos
+    $destinationPath = public_path('storage/profile-photos');
+    if (!file_exists($destinationPath)) {
+        mkdir($destinationPath, 0777, true);
+    }
+
+    $image->move($destinationPath, $filename);
+
+    // Guardar la ruta relativa en la base de datos
+    $data['profile_photo_path'] = 'profile-photos/' . $filename;
+}
+
 
         // Verificar si se completaron los campos principales para marcar como completo
         $profileCompleted = !empty($user->first_name) && !empty($user->last_name) &&
