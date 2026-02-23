@@ -112,13 +112,16 @@
                                         <td>{{ Str::limit($nota->Observaciones, 30) }}</td>
                                         <td>
                                             @if($nota->Estado == 'CERRADO')
-                                                <span class="badge badge-success p-1" style="font-size: 0.7rem;">CERRADO</span>
+                                                <span class="badge-estado success">CERRADO</span>
                                             @elseif($nota->Estado == 'ABIERTO')
-                                                <span class="badge badge-warning p-1" style="font-size: 0.7rem;">ABIERTO</span>
+                                                <span class="badge-estado warning">ABIERTO</span>
+                                            @elseif($nota->Estado == 'PENDIENTE')
+                                                <span class="badge-estado secondary">PENDIENTE</span>
                                             @else
                                                 <span class="badge badge-secondary p-1" style="font-size: 0.7rem;">{{ $nota->Estado }}</span>
                                             @endif
                                         </td>
+
                                         <td class="text-center">
                                             @if($nota->link)
                                                 <a href="{{ $nota->link }}" target="_blank" class="btn btn-xs btn-outline-info p-1">
@@ -135,13 +138,14 @@
                                         </td>
                                         <td>
                                             @if($nota->destinatario)
-                                                <span class="badge badge-info p-1" style="font-size: 0.7rem;" title="{{ $nota->destinatario->name }} - {{ $nota->destinatario->organization ?? 'Sin organización' }}">
+                                                <span class="badge-destinatario badge-info" title="{{ $nota->destinatario->name }} - {{ $nota->destinatario->organization ?? 'Sin organización' }}">
                                                     {{ Str::limit($nota->destinatario->name, 15) }}
                                                 </span>
                                             @else
-                                                <span class="badge badge-secondary p-1" style="font-size: 0.7rem;">Sin destinatario</span>
+                                                <span class="badge-destinatario badge-secondary">Sin destinatario</span>
                                             @endif
                                         </td>
+
                                         <td class="text-center">
                                             <button type="button" class="btn btn-xs btn-outline-purple p-1" title="Ver Resumen AI" data-toggle="modal" data-target="#resumenAIModal{{ $nota->id }}">
                                                 <i class="fas fa-robot fa-sm"></i>
@@ -461,6 +465,7 @@ $(document).ready(function() {
     });
 });
 </script>
+@section('styles')
 <style>
     /* Estilos para la tabla */
     #tabla-notas {
@@ -513,14 +518,6 @@ $(document).ready(function() {
         min-width: 120px;
     }
 
-    /* Estilos para los badges */
-    .badge {
-        font-size: 0.7rem;
-        font-weight: 500;
-        display: inline-block;
-        min-width: 60px;
-    }
-
     /* Estilos para los iconos de PDF y Link */
     #tabla-notas td:nth-child(10), /* Link */
     #tabla-notas td:nth-child(11)  /* PDF */ {
@@ -537,24 +534,6 @@ $(document).ready(function() {
     .btn-xs i {
         font-size: 0.8em;
         margin: 0 !important;
-    }
-
-    /* Estilos para los badges de estado */
-    .badge-success {
-        background-color: #28a745;
-    }
-
-    .badge-warning {
-        background-color: #ffc107;
-        color: #212529;
-    }
-
-    .badge-secondary {
-        background-color: #6c757d;
-    }
-
-    .badge-info {
-        background-color: #17a2b8;
     }
 
     /* Estilos para los botones personalizados */
@@ -587,7 +566,51 @@ $(document).ready(function() {
         white-space: normal;
         word-wrap: break-word;
     }
+
+    /* Estilos ESPECÍFICOS para los badges de estado en esta vista */
+    .badge-estado {
+        display: inline-block;
+        padding: 0.25em 0.5em;
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+        min-width: 60px;
+    }
+
+    .badge-estado.success {
+        color: #fff;
+        background-color: #28a745;
+    }
+
+    .badge-estado.warning {
+        color: #212529;
+        background-color: #ffc107;
+    }
+
+    .badge-estado.secondary {
+        color: #fff;
+        background-color: #6c757d;
+    }
+
+    /* Estilo para los badges de destinatario */
+    .badge-destinatario {
+        display: inline-block;
+        padding: 0.25em 0.5em;
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
 </style>
+@endsection
+
 @endsection
 
 
