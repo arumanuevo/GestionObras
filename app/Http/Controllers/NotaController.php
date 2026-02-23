@@ -645,16 +645,18 @@ public function destroy(Nota $nota)
     public function show(Nota $nota)
     {
         // Verificar permisos
-        if (!auth()->user()->hasAnyRole(['admin', 'editor', 'consulta'])) {
-            abort(403, 'No tienes permiso para ver esta nota');
-        }
-
-        // Verificar si el usuario es el destinatario o tiene permisos para ver todas las notas
-        if (auth()->user()->id !== $nota->destinatario_id && !auth()->user()->hasRole('admin')) {
+        // Permitir acceso si:
+        // 1. Es administrador
+        // 2. Es el creador de la nota
+        // 3. Es el destinatario de la nota
+        if (!auth()->user()->hasAnyRole(['admin', 'editor', 'consulta']) &&
+            auth()->user()->id !== $nota->user_id &&
+            auth()->user()->id !== $nota->destinatario_id) {
             abort(403, 'No tienes permiso para ver esta nota');
         }
 
         return view('notas.show', compact('nota'));
     }
+
 
 }
