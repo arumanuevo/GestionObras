@@ -170,6 +170,7 @@
     .user-header p {
         margin-bottom: 0.2rem;
         font-size: 0.9rem;
+        font-weight: 500;
     }
 
     .user-header small {
@@ -188,40 +189,68 @@
     .user-menu .badge {
         margin-left: 0.3rem;
     }
+
+    /* Estilo para el rol en el header */
+    .user-role-badge {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 0.2rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        margin-top: 0.3rem;
+        text-transform: capitalize;
+    }
+
+    /* Colores para los diferentes roles */
+    .user-role-badge.admin {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .user-role-badge.editor {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .user-role-badge.consulta {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: #17a2b8;
+        border: 1px solid rgba(23, 162, 184, 0.3);
+    }
+
     /* Estilos para el brand logo */
-.brand-link {
-    transition: all 0.3s ease;
-    overflow: hidden;
-    white-space: nowrap;
-}
+    .brand-link {
+        transition: all 0.3s ease;
+        overflow: hidden;
+        white-space: nowrap;
+    }
 
-.brand-icon {
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-}
+    .brand-icon {
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
 
-/* Cuando el sidebar está retraído */
-.sidebar-mini.sidebar-collapse .brand-link {
-    justify-content: center;
-}
+    /* Cuando el sidebar está retraído */
+    .sidebar-mini.sidebar-collapse .brand-link {
+        justify-content: center;
+    }
 
-.sidebar-mini.sidebar-collapse .brand-text {
-    display: none;
-}
+    .sidebar-mini.sidebar-collapse .brand-text {
+        display: none;
+    }
 
-.sidebar-mini.sidebar-collapse .brand-icon {
-    font-size: 1.5rem;
-    margin-right: 0;
-}
+    .sidebar-mini.sidebar-collapse .brand-icon {
+        font-size: 1.5rem;
+        margin-right: 0;
+    }
 
-/* Ajuste para el brand text */
-.brand-text {
-    transition: all 0.3s ease;
-}
-
+    /* Ajuste para el brand text */
+    .brand-text {
+        transition: all 0.3s ease;
+    }
 </style>
-
-
 </head>
 <body class="{{ auth()->check() ? 'hold-transition sidebar-mini' : '' }}">
     @if(auth()->check())
@@ -238,65 +267,68 @@
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
                 <!-- User Dropdown Menu -->
-                <!-- User Dropdown Menu -->
-<li class="nav-item dropdown user-menu">
-    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-        <div class="user-image-container">
-            <img src="{{ auth()->user()->profile_photo_url }}"
-                 class="user-image {{ !auth()->user()->profile_photo_path ? 'default-avatar' : '' }}"
-                 alt="User Image">
-        </div>
-        <span class="d-none d-md-inline" style="font-size: 0.85rem;">{{ auth()->user()->name }}</span>
-        @if(!auth()->user()->profile_completed)
-            <span class="badge badge-warning ml-1" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">!</span>
-        @endif
-    </a>
-    <ul class="dropdown-menu dropdown-menu-right">
-        <!-- User image header -->
-        <li class="user-header">
-            <div class="user-header-image">
-                <img src="{{ auth()->user()->profile_photo_url }}"
-                     class="{{ !auth()->user()->profile_photo_path ? 'default-avatar-large' : '' }}"
-                     alt="User Image">
-                @if(!auth()->user()->profile_photo_path)
-                    <span class="avatar-upload-indicator-large">
-                        <i class="fas fa-camera"></i>
-                    </span>
-                @endif
-            </div>
-            <p>{{ auth()->user()->full_name }}</p>
-            <small>Miembro desde {{ auth()->user()->created_at->format('M Y') }}</small>
-        </li>
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                        <div class="user-image-container">
+                            <img src="{{ auth()->user()->profile_photo_url }}"
+                                 class="user-image {{ !auth()->user()->profile_photo_path ? 'default-avatar' : '' }}"
+                                 alt="User Image">
+                        </div>
+                        <span class="d-none d-md-inline" style="font-size: 0.85rem;">{{ auth()->user()->name }}</span>
+                        @if(!auth()->user()->profile_completed)
+                            <span class="badge badge-warning ml-1" style="font-size: 0.6rem; padding: 0.15rem 0.3rem;">!</span>
+                        @endif
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-right">
+                        <!-- User image header -->
+                        <li class="user-header">
+                            <div class="user-header-image">
+                                <img src="{{ auth()->user()->profile_photo_url }}"
+                                     class="{{ !auth()->user()->profile_photo_path ? 'default-avatar-large' : '' }}"
+                                     alt="User Image">
+                                @if(!auth()->user()->profile_photo_path)
+                                    <span class="avatar-upload-indicator-large">
+                                        <i class="fas fa-camera"></i>
+                                    </span>
+                                @endif
+                            </div>
+                            <p>{{ auth()->user()->full_name }}</p>
+                            @if(auth()->user()->roles->isNotEmpty())
+                                <span class="user-role-badge {{ auth()->user()->roles->first()->name }}">
+                                    {{ auth()->user()->roles->first()->name }}
+                                </span>
+                            @endif
+                            <small>Miembro desde {{ auth()->user()->created_at->format('M Y') }}</small>
+                        </li>
 
-        <!-- Menu Body -->
-        <li class="user-body">
-            <a href="{{ route('profile.show') }}" class="btn btn-sm btn-outline-primary btn-block">
-                <i class="fas fa-user-circle mr-1"></i> Ver Perfil
-            </a>
-            @if(!auth()->user()->profile_completed)
-                <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-warning btn-block">
-                    <i class="fas fa-exclamation-circle mr-1"></i> Completar Perfil
-                </a>
-            @endif
-        </li>
+                        <!-- Menu Body -->
+                        <li class="user-body">
+                            <a href="{{ route('profile.show') }}" class="btn btn-sm btn-outline-primary btn-block">
+                                <i class="fas fa-user-circle mr-1"></i> Ver Perfil
+                            </a>
+                            @if(!auth()->user()->profile_completed)
+                                <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-warning btn-block">
+                                    <i class="fas fa-exclamation-circle mr-1"></i> Completar Perfil
+                                </a>
+                            @endif
+                        </li>
 
-        <!-- Menu Footer -->
-        <li class="user-footer">
-            <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-cog mr-1"></i> Configuración
-            </a>
-            <a href="{{ route('logout') }}"
-               class="btn btn-sm btn-outline-danger"
-               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
-            </a>
-            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                @csrf
-            </form>
-        </li>
-    </ul>
-</li>
-
+                        <!-- Menu Footer -->
+                        <li class="user-footer">
+                            <a href="{{ route('profile.edit') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-cog mr-1"></i> Configuración
+                            </a>
+                            <a href="{{ route('logout') }}"
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fas fa-sign-out-alt mr-1"></i> Cerrar sesión
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        </li>
+                    </ul>
+                </li>
             </ul>
         </nav>
         <!-- /.navbar -->
@@ -304,14 +336,12 @@
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <!-- Brand Logo -->
             <a href="{{ url('/home') }}" class="brand-link d-flex align-items-center justify-content-center" style="height: 56px;">
-        <div class="d-flex align-items-center">
-            <i class="fas fa-hard-hat brand-icon"></i>
-            <span class="brand-text font-weight-light ml-2">{{ config('app.name', 'Gestión de Obras') }}</span>
-        </div>
-    </a>
-   
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-hard-hat brand-icon"></i>
+                    <span class="brand-text font-weight-light ml-2">{{ config('app.name', 'Gestión de Obras') }}</span>
+                </div>
+            </a>
 
             <!-- Sidebar -->
             <div class="sidebar">
@@ -393,5 +423,4 @@
     @yield('scripts')
 </body>
 </html>
-
 
