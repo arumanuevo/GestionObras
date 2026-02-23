@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
-use App\Notifications\CustomResetPasswordNotification; 
+use App\Notifications\CustomResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 
 class User extends Authenticatable implements MustVerifyEmail
@@ -21,8 +21,6 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
-        'first_name',
-        'last_name',
         'email',
         'password',
         'phone',
@@ -39,6 +37,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'approved_by',
         'approved_at'
     ];
+
     /**
      * The attributes that should be hidden for arrays.
      *
@@ -62,16 +61,6 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Get the user's full name.
-     *
-     * @return string
-     */
-    public function getFullNameAttribute()
-    {
-        return "{$this->first_name} {$this->last_name}";
-    }
-
-    /**
      * Get the URL to the user's profile photo.
      *
      * @return string
@@ -82,15 +71,12 @@ class User extends Authenticatable implements MustVerifyEmail
             return asset('storage/' . $this->profile_photo_path);
         }
 
-        // Usamos una imagen de perfil genérica de AdminLTE
-        //return 'https://adminlte.io/themes/v3/dist/img/user8-128x128.jpg';
+        // Usamos una imagen de perfil genérica
         return 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
     }
-   
 
     public function sendEmailVerificationNotification()
     {
-        // Solo usamos nuestra notificación personalizada
         if (!$this->hasVerifiedEmail()) {
             $this->notify(new VerifyEmailNotification());
         }

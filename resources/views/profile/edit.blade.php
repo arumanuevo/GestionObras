@@ -92,22 +92,11 @@
                                             <!-- Tab Información Personal -->
                                             <div class="active tab-pane" id="personal">
                                                 <div class="row">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-12">
                                                         <div class="form-group">
-                                                            <label for="first_name" style="font-size: 0.85rem; font-weight: bold; display: block;">Nombre</label>
-                                                            <input type="text" class="form-control form-control-sm @error('first_name') is-invalid @enderror" id="first_name" name="first_name" value="{{ old('first_name', $user->first_name) }}" style="font-size: 0.85rem;">
-                                                            @error('first_name')
-                                                                <span class="invalid-feedback" role="alert" style="font-size: 0.8rem;">
-                                                                    <strong>{{ $message }}</strong>
-                                                                </span>
-                                                            @enderror
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <div class="form-group">
-                                                            <label for="last_name" style="font-size: 0.85rem; font-weight: bold; display: block;">Apellido</label>
-                                                            <input type="text" class="form-control form-control-sm @error('last_name') is-invalid @enderror" id="last_name" name="last_name" value="{{ old('last_name', $user->last_name) }}" style="font-size: 0.85rem;">
-                                                            @error('last_name')
+                                                            <label for="name" style="font-size: 0.85rem; font-weight: bold; display: block;">Nombre Completo</label>
+                                                            <input type="text" class="form-control form-control-sm @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $user->name) }}" style="font-size: 0.85rem;">
+                                                            @error('name')
                                                                 <span class="invalid-feedback" role="alert" style="font-size: 0.8rem;">
                                                                     <strong>{{ $message }}</strong>
                                                                 </span>

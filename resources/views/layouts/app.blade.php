@@ -21,236 +21,248 @@
 
     @yield('styles')
     <style>
-    /* Estilos para las imágenes de perfil */
-    .user-image {
-        object-fit: cover;
-        object-position: center;
-        background-color: #f8f9fa;
-        border-radius: 50%;
-    }
+        /* Estilos para las imágenes de perfil */
+        .user-image {
+            object-fit: cover;
+            object-position: center;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+        }
 
-    /* Estilo específico para la imagen en el navbar */
-    .navbar .user-image {
-        width: 28px;
-        height: 28px;
-        border: 1px solid #dee2e6;
-        object-fit: cover;
-    }
+        /* Estilo específico para la imagen en el navbar */
+        .navbar .user-image {
+            width: 28px;
+            height: 28px;
+            border: 1px solid #dee2e6;
+            object-fit: cover;
+        }
 
-    /* Contenedor para la imagen en el navbar */
-    .user-image-container {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 1px solid #dee2e6;
-        background-color: #f8f9fa;
-        vertical-align: middle;
-        margin-right: 8px;
-    }
+        /* Contenedor para la imagen en el navbar */
+        .user-image-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid #dee2e6;
+            background-color: #f8f9fa;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
 
-    /* Estilo para el dropdown menu */
-    .dropdown-menu {
-        min-width: 280px;
-        padding: 0;
-        border: none;
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    }
+        /* Estilo para el dropdown menu */
+        .dropdown-menu {
+            min-width: 280px;
+            padding: 0;
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
 
-    .user-header {
-        background: linear-gradient(135deg, #007bff, #0056b3);
-        color: white;
-        text-align: center;
-        padding: 0.75rem 1rem 0.5rem;
-    }
+        /* Estilo específico para el user-header con selector más específico */
+        body .wrapper .main-header .navbar-nav .user-menu .dropdown-menu li.user-header {
+            height: auto !important;
+            min-height: 150px !important;
+            padding: 1rem !important;
+            text-align: center !important;
+            background: linear-gradient(135deg, #007bff, #0056b3) !important;
+            color: white !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
 
-    .user-body {
-        padding: 0.75rem 1rem;
-        background-color: #f8f9fa;
-    }
+        .user-body {
+            padding: 0.75rem 1rem;
+            background-color: #f8f9fa;
+        }
 
-    .user-footer {
-        padding: 0.75rem 1rem;
-        background-color: #f8f9fa;
-        display: flex;
-        justify-content: space-between;
-    }
+        .user-footer {
+            padding: 0.75rem 1rem;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+        }
 
-    /* Estilos para los botones en el menú */
-    .user-body .btn {
-        font-size: 0.8rem;
-        padding: 0.3rem 0.5rem;
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
+        /* Estilos para los botones en el menú */
+        .user-body .btn {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.5rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
 
-    .user-footer .btn {
-        font-size: 0.8rem;
-        padding: 0.3rem 0.5rem;
-        flex: 1;
-        margin: 0 0.25rem;
-    }
+        .user-footer .btn {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.5rem;
+            flex: 1;
+            margin: 0 0.25rem;
+        }
 
-    /* Estilo para el contenedor de la imagen en el header */
-    .user-header-image {
-        width: 60px;
-        height: 60px;
-        margin: 0 auto;
-        position: relative;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 2px solid white;
-        background-color: white;
-    }
+        /* Estilo para el contenedor de la imagen en el header */
+        .user-header-image {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 0.5rem;
+            position: relative;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid white;
+            background-color: white;
+        }
 
-    .user-header-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 50%;
-    }
+        .user-header-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
 
-    /* Estilos para el indicador de avatar por defecto */
-    .default-avatar {
-        position: relative;
-        border: 1px dashed #6c757d;
-    }
+        /* Estilos para el indicador de avatar por defecto */
+        .default-avatar {
+            position: relative;
+            border: 1px dashed #6c757d;
+        }
 
-    .default-avatar-large {
-        position: relative;
-    }
+        .default-avatar-large {
+            position: relative;
+        }
 
-    .avatar-upload-indicator {
-        position: absolute;
-        bottom: -2px;
-        right: -2px;
-        background-color: #007bff;
-        color: white;
-        border-radius: 50%;
-        width: 12px;
-        height: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.5rem;
-        border: 1px solid white;
-    }
+        .avatar-upload-indicator {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.5rem;
+            border: 1px solid white;
+        }
 
-    .avatar-upload-indicator-large {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: rgba(0, 123, 255, 0.8);
-        color: white;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.9rem;
-        z-index: 1;
-    }
+        .avatar-upload-indicator-large {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 123, 255, 0.8);
+            color: white;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            z-index: 1;
+        }
 
-    /* Estilo para el contorno del avatar por defecto */
-    .user-header .default-avatar-large {
-        box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 123, 255, 0.3);
-    }
+        /* Estilo para el contorno del avatar por defecto */
+        .user-header .default-avatar-large {
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba(0, 123, 255, 0.3);
+        }
 
-    /* Estilo para el contorno del avatar pequeño por defecto */
-    .default-avatar {
-        box-shadow: 0 0 0 1px rgba(108, 117, 125, 0.5);
-    }
+        /* Estilo para el contorno del avatar pequeño por defecto */
+        .default-avatar {
+            box-shadow: 0 0 0 1px rgba(108, 117, 125, 0.5);
+        }
 
-    /* Ajuste para el texto del header */
-    .user-header p {
-        margin-bottom: 0.2rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
+        /* Ajuste para el texto del header */
+        .user-header p {
+            margin-bottom: 0.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
 
-    .user-header small {
-        font-size: 0.75rem;
-        opacity: 0.8;
-    }
+        .user-header small {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
 
-    /* Ajuste para el dropdown toggle en el navbar */
-    .user-menu .dropdown-toggle {
-        display: flex;
-        align-items: center;
-        padding: 0.25rem 0.5rem;
-    }
+        /* Ajuste para el dropdown toggle en el navbar */
+        .user-menu .dropdown-toggle {
+            display: flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+        }
 
-    /* Ajuste para el badge de notificación */
-    .user-menu .badge {
-        margin-left: 0.3rem;
-    }
+        /* Ajuste para el badge de notificación */
+        .user-menu .badge {
+            margin-left: 0.3rem;
+        }
 
-    /* Estilo para el rol en el header */
-    .user-role-badge {
-        display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 0.2rem;
-        font-size: 0.7rem;
-        font-weight: 500;
-        margin-top: 0.3rem;
-        text-transform: capitalize;
-    }
+        /* Estilo para el rol en el footer del menú */
+        .user-role-footer {
+            padding: 0.5rem 1rem;
+            background-color: rgba(0, 0, 0, 0.03);
+            text-align: center;
+            font-size: 0.7rem;
+            color: #6c757d;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
 
-    /* Colores para los diferentes roles */
-    .user-role-badge.admin {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: #fff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
+        .user-role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.2rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
 
-    .user-role-badge.editor {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: #ffc107;
-        border: 1px solid rgba(255, 193, 7, 0.3);
-    }
+        /* Colores para los diferentes roles */
+        .user-role-badge.admin {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
 
-    .user-role-badge.consulta {
-        background-color: rgba(255, 255, 255, 0.2);
-        color: #17a2b8;
-        border: 1px solid rgba(23, 162, 184, 0.3);
-    }
+        .user-role-badge.editor {
+            background-color: #fff8e1;
+            color: #f57c00;
+        }
 
-    /* Estilos para el brand logo */
-    .brand-link {
-        transition: all 0.3s ease;
-        overflow: hidden;
-        white-space: nowrap;
-    }
+        .user-role-badge.consulta {
+            background-color: #e0f2f1;
+            color: #00796b;
+        }
 
-    .brand-icon {
-        font-size: 1.2rem;
-        transition: all 0.3s ease;
-    }
+        /* Estilos para el brand logo */
+        .brand-link {
+            transition: all 0.3s ease;
+            overflow: hidden;
+            white-space: nowrap;
+        }
 
-    /* Cuando el sidebar está retraído */
-    .sidebar-mini.sidebar-collapse .brand-link {
-        justify-content: center;
-    }
+        .brand-icon {
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
 
-    .sidebar-mini.sidebar-collapse .brand-text {
-        display: none;
-    }
+        /* Cuando el sidebar está retraído */
+        .sidebar-mini.sidebar-collapse .brand-link {
+            justify-content: center;
+        }
 
-    .sidebar-mini.sidebar-collapse .brand-icon {
-        font-size: 1.5rem;
-        margin-right: 0;
-    }
+        .sidebar-mini.sidebar-collapse .brand-text {
+            display: none;
+        }
 
-    /* Ajuste para el brand text */
-    .brand-text {
-        transition: all 0.3s ease;
-    }
-</style>
+        .sidebar-mini.sidebar-collapse .brand-icon {
+            font-size: 1.5rem;
+            margin-right: 0;
+        }
+
+        /* Ajuste para el brand text */
+        .brand-text {
+            transition: all 0.3s ease;
+        }
+    </style>
 </head>
 <body class="{{ auth()->check() ? 'hold-transition sidebar-mini' : '' }}">
     @if(auth()->check())
@@ -292,12 +304,7 @@
                                     </span>
                                 @endif
                             </div>
-                            <p>{{ auth()->user()->full_name }}</p>
-                            @if(auth()->user()->roles->isNotEmpty())
-                                <span class="user-role-badge {{ auth()->user()->roles->first()->name }}">
-                                    {{ auth()->user()->roles->first()->name }}
-                                </span>
-                            @endif
+                            <p>{{ auth()->user()->name }}</p>
                             <small>Miembro desde {{ auth()->user()->created_at->format('M Y') }}</small>
                         </li>
 
@@ -327,6 +334,16 @@
                                 @csrf
                             </form>
                         </li>
+
+                        <!-- User Role Footer -->
+                        @if(auth()->user()->roles->isNotEmpty())
+                        <li class="user-role-footer">
+                            <span>Rol logeado:</span>
+                            <span class="user-role-badge {{ auth()->user()->roles->first()->name }}">
+                                {{ auth()->user()->roles->first()->name }}
+                            </span>
+                        </li>
+                        @endif
                     </ul>
                 </li>
             </ul>
@@ -423,4 +440,5 @@
     @yield('scripts')
 </body>
 </html>
+
 
