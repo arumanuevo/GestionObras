@@ -16,9 +16,11 @@
                             <i class="fas fa-file-export"></i> Exportar CSV
                         </button>
                         @endif
+                        @if(auth()->user()->hasAnyRole(['admin', 'editor']))
                         <a href="{{ route('notas.create') }}" class="btn btn-sm btn-outline-success">
                             <i class="fas fa-plus"></i> Agregar Nota
                         </a>
+                        @endif
                     </div>
                 </div>
                 <!-- /.card-header -->
@@ -213,12 +215,10 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="action-buttons">
-                                                <!-- Botón para ver la nota (siempre visible si tiene permisos) -->
-                                                @if(auth()->user()->id === $nota->user_id || auth()->user()->id === $nota->destinatario_id || auth()->user()->hasRole('admin'))
+                                                <!-- Botón para ver la nota (disponible para todos los roles) -->
                                                 <a href="{{ route('notas.show', $nota->id) }}" class="btn-action btn-outline-primary" title="Ver nota">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                @endif
 
                                                 <!-- Botón para responder (solo si el usuario es el destinatario) -->
                                                 @if(auth()->user()->id === $nota->destinatario_id)
