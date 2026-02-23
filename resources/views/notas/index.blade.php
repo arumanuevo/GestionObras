@@ -60,6 +60,7 @@
                                     <th>Estado</th>
                                     <th>Link</th>
                                     <th>PDF</th>
+                                    <th>Destinatario</th>
                                     <th>Resumen AI</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -111,11 +112,11 @@
                                         <td>{{ Str::limit($nota->Observaciones, 30) }}</td>
                                         <td>
                                             @if($nota->Estado == 'CERRADO')
-                                                <span class="badge badge-success p-2">CERRADO</span>
+                                                <span class="badge badge-success p-1" style="font-size: 0.7rem;">CERRADO</span>
                                             @elseif($nota->Estado == 'ABIERTO')
-                                                <span class="badge badge-warning p-2">ABIERTO</span>
+                                                <span class="badge badge-warning p-1" style="font-size: 0.7rem;">ABIERTO</span>
                                             @else
-                                                <span class="badge badge-secondary p-2">{{ $nota->Estado }}</span>
+                                                <span class="badge badge-secondary p-1" style="font-size: 0.7rem;">{{ $nota->Estado }}</span>
                                             @endif
                                         </td>
                                         <td class="text-center">
@@ -132,16 +133,35 @@
                                                 </a>
                                             @endif
                                         </td>
-
+                                        <td>
+                                            @if($nota->destinatario)
+                                                <span class="badge badge-info p-1" style="font-size: 0.7rem;" title="{{ $nota->destinatario->name }} - {{ $nota->destinatario->organization ?? 'Sin organización' }}">
+                                                    {{ Str::limit($nota->destinatario->name, 15) }}
+                                                </span>
+                                            @else
+                                                <span class="badge badge-secondary p-1" style="font-size: 0.7rem;">Sin destinatario</span>
+                                            @endif
+                                        </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-xs btn-outline-purple p-1" title="Ver Resumen AI" data-toggle="modal" data-target="#resumenAIModal{{ $nota->id }}">
                                                 <i class="fas fa-robot fa-sm"></i>
                                             </button>
                                         </td>
                                         <td class="text-center">
+                                            <!-- Botón para ver la nota (siempre visible si tiene permisos) -->
+                                            <a href="{{ route('notas.show', $nota->id) }}" class="btn btn-xs btn-outline-primary p-1" title="Ver nota">
+                                                <i class="fas fa-eye fa-sm"></i>
+                                            </a>
+
+                                            <!-- Botón para editar (solo visible si es el creador o admin) -->
+                                            @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
                                             <a href="{{ route('notas.edit', $nota->id) }}" class="btn btn-xs btn-outline-warning p-1" title="Editar">
                                                 <i class="fas fa-edit fa-sm"></i>
                                             </a>
+                                            @endif
+
+                                            <!-- Formulario para eliminar (solo visible si es el creador o admin) -->
+                                            @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
                                             <form action="{{ route('notas.destroy', $nota->id) }}" method="POST" style="display:inline;">
                                                 @csrf
                                                 @method('DELETE')
@@ -149,7 +169,9 @@
                                                     <i class="fas fa-trash fa-sm"></i>
                                                 </button>
                                             </form>
+                                            @endif
                                         </td>
+
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -300,7 +322,7 @@ $(document).ready(function() {
 
         // Crear array para el CSV
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ID;Tipo;Nro;Tema;Texto;Fecha;Rta a NP;Respondida por;Observaciones;Estado\n";
+        csvContent += "ID;Tipo;Nro;Tema;Texto;Fecha;Rta a NP;Respondida por;Observaciones;Estado;Link;Destinatario;Resumen AI\n";
 
         // Procesar cada fila
         $(rows).each(function(index, row) {
@@ -317,6 +339,10 @@ $(document).ready(function() {
             const respondida_por = $row.data('respondida-por');
             const observaciones = $row.data('observaciones');
             const estado = $row.data('estado');
+
+            // Obtener destinatario y resumen AI de la fila
+            const destinatario = $row.find('td:nth-child(12)').text().trim();
+            const resumenAI = $row.find('td:nth-child(13) button').attr('title') === 'Ver Resumen AI' ? 'Sí' : 'No';
 
             // Escapar valores para CSV
             const escapeCsv = (value) => {
@@ -342,7 +368,10 @@ $(document).ready(function() {
                 escapeCsv(rta_np),
                 escapeCsv(respondida_por),
                 escapeCsv(observaciones),
-                escapeCsv(estado)
+                escapeCsv(estado),
+                escapeCsv(''), // Link
+                escapeCsv(destinatario),
+                escapeCsv(resumenAI)
             ].join(';');
 
             csvContent += line + "\n";
@@ -433,39 +462,130 @@ $(document).ready(function() {
 });
 </script>
 <style>
-    #tabla-notas tbody tr.table-active {
-        background-color: rgba(0, 123, 255, 0.1) !important;
-        font-weight: 500;
+    /* Estilos para la tabla */
+    #tabla-notas {
+        width: 100% !important;
     }
+
+    /* Centrar todos los encabezados de la tabla */
+    #tabla-notas th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 0.5rem !important;
+    }
+
+    /* Centrar el contenido de todas las celdas */
+    #tabla-notas td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.5rem;
+    }
+
+    /* Excepciones para columnas que no deben estar centradas */
+    #tabla-notas td:nth-child(4), /* Tema */
+    #tabla-notas td:nth-child(5), /* Texto */
+    #tabla-notas td:nth-child(8), /* Observaciones */
+    #tabla-notas td:nth-child(12) /* Destinatario */ {
+        text-align: left;
+    }
+
+    /* Estilos para los botones de acciones */
+    .btn-group-actions {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: center;
+        gap: 0.25rem;
+        align-items: center;
+    }
+
+    .btn-group-actions .btn {
+        min-width: 2.2rem;
+        padding: 0.2rem 0.3rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Ajustar el ancho de la columna de acciones */
+    #tabla-notas th:last-child,
+    #tabla-notas td:last-child {
+        width: 120px;
+        min-width: 120px;
+    }
+
+    /* Estilos para los badges */
+    .badge {
+        font-size: 0.7rem;
+        font-weight: 500;
+        display: inline-block;
+        min-width: 60px;
+    }
+
+    /* Estilos para los iconos de PDF y Link */
+    #tabla-notas td:nth-child(10), /* Link */
+    #tabla-notas td:nth-child(11)  /* PDF */ {
+        padding: 0.3rem !important;
+    }
+
+    /* Estilos para los botones de acciones */
     .btn-xs {
         padding: 0.2rem 0.4rem;
         font-size: 0.7rem;
         line-height: 1.2;
     }
-    .fa-sm {
+
+    .btn-xs i {
         font-size: 0.8em;
+        margin: 0 !important;
     }
-    .badge {
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
+
+    /* Estilos para los badges de estado */
     .badge-success {
         background-color: #28a745;
     }
+
     .badge-warning {
         background-color: #ffc107;
         color: #212529;
     }
+
     .badge-secondary {
         background-color: #6c757d;
     }
+
+    .badge-info {
+        background-color: #17a2b8;
+    }
+
+    /* Estilos para los botones personalizados */
     .btn-outline-purple {
         border-color: #9c27b0;
         color: #9c27b0;
     }
+
     .btn-outline-purple:hover {
         background-color: #9c27b0;
         color: white;
+    }
+
+    /* Estilo para resaltar filas */
+    #tabla-notas tbody tr.table-active {
+        background-color: rgba(0, 123, 255, 0.1) !important;
+        font-weight: 500;
+    }
+
+    /* Estilo para las celdas de texto */
+    #tabla-notas td:nth-child(5) { /* Texto */
+        max-width: 200px;
+        white-space: normal;
+        word-wrap: break-word;
+    }
+
+    /* Estilo para las celdas de observaciones */
+    #tabla-notas td:nth-child(8) { /* Observaciones */
+        max-width: 150px;
+        white-space: normal;
+        word-wrap: break-word;
     }
 </style>
 @endsection

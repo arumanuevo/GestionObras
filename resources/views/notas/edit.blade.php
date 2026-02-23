@@ -5,12 +5,14 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h3 class="card-title m-0">Editar Nota</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('notas.index') }}" class="btn btn-sm btn-outline-secondary" id="btnVolver">
-                            <i class="fas fa-arrow-left"></i> Volver
-                        </a>
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title m-0">Editar Nota</h3>
+                        <div class="d-flex">
+                            <a href="{{ route('notas.index') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver al listado
+                            </a>
+                        </div>
                     </div>
                 </div>
                 <!-- /.card-header -->
@@ -50,6 +52,24 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Campo para seleccionar destinatario -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="destinatario_id" class="small">Destinatario</label>
+                                    <select class="form-control form-control-sm" id="destinatario_id" name="destinatario_id" style="width: 100%;">
+                                        <option value="">Seleccionar destinatario (opcional)</option>
+                                        @foreach($usuarios as $usuario)
+                                            <option value="{{ $usuario->id }}" {{ $nota->destinatario_id == $usuario->id ? 'selected' : '' }}>
+                                                {{ $usuario->name }} - {{ $usuario->organization ?? 'Sin organización' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="texto" class="small">Texto</label>
                             <textarea class="form-control form-control-sm" id="texto" name="texto" rows="3" style="resize: none;">{{ $nota->texto }}</textarea>
@@ -186,6 +206,14 @@
 @section('scripts')
 <script>
 $(document).ready(function() {
+    // Inicializar Select2 para el selector de destinatario
+    $('#destinatario_id').select2({
+        theme: 'bootstrap4',
+        placeholder: "Seleccionar destinatario (opcional)",
+        allowClear: true,
+        width: '100%'
+    });
+
     // Bandera para detectar cambios
     let cambiosRealizados = false;
     let formSubmitted = false;
@@ -230,7 +258,7 @@ $(document).ready(function() {
                     if (response.success) {
                         $('#texto_pdf').val(response.texto_pdf);
                     } else {
-                        // Mostrar error en el modal en lugar de alert
+                        // Mostrar error en el modal
                         $('#modalEsperaTitulo').text('Error');
                         $('#modalEsperaMensaje').text(response.message);
                         $('#modalEspera').modal('show');
@@ -244,7 +272,7 @@ $(document).ready(function() {
                 },
                 error: function(xhr) {
                     $('#modalEspera').modal('hide');
-                    // Mostrar error en el modal en lugar de alert
+                    // Mostrar error en el modal
                     $('#modalEsperaTitulo').text('Error');
                     $('#modalEsperaMensaje').text('Error al procesar el PDF. Por favor intente nuevamente.');
                     $('#modalEspera').modal('show');
@@ -265,7 +293,7 @@ $(document).ready(function() {
         var cantidadPalabras = $('#cantidad_palabras').val();
 
         if (!textoPDF) {
-            // Mostrar error en el modal en lugar de alert
+            // Mostrar error en el modal
             $('#modalEsperaTitulo').text('Advertencia');
             $('#modalEsperaMensaje').text('Primero debes cargar un PDF.');
             $('#modalEspera').modal('show');
@@ -294,7 +322,7 @@ $(document).ready(function() {
                     $('#resumen_ai').val(response.resumen);
                     cambiosRealizados = true;
                 } else {
-                    // Mostrar error en el modal en lugar de alert
+                    // Mostrar error en el modal
                     $('#modalEsperaTitulo').text('Error');
                     $('#modalEsperaMensaje').text(response.message);
                     $('#modalEspera').modal('show');
@@ -305,7 +333,7 @@ $(document).ready(function() {
             },
             error: function(xhr, status, error) {
                 $('#modalEspera').modal('hide');
-                // Mostrar error en el modal en lugar de alert
+                // Mostrar error en el modal
                 $('#modalEsperaTitulo').text('Error');
                 $('#modalEsperaMensaje').text('Error al generar el resumen AI.');
                 $('#modalEspera').modal('show');
@@ -321,7 +349,7 @@ $(document).ready(function() {
         formSubmitted = true;
     });
 
-    // Manejar el botón Cancelar
+    // Manejar el botón Cancelar/Volver
     $('#btnVolver').on('click', function(e) {
         if (cambiosRealizados && !formSubmitted) {
             e.preventDefault();
@@ -355,8 +383,15 @@ $(document).ready(function() {
     .text-purple {
         color: #9c27b0;
     }
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.8125rem + 2px) !important;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.85rem !important;
+    }
 </style>
 @endsection
+
+
 
 
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\HomeController;
 
+
 // Ruta principal
 Route::get('/', function () {
     return view('welcome');
@@ -55,9 +56,21 @@ Route::middleware(['auth', 'approved'])->group(function () {
     Route::post('/notas/{nota}/subir-pdf', [NotaController::class, 'subirPDF'])->name('notas.subir-pdf');
     Route::post('/subir-pdf-temporal', [NotaController::class, 'subirPDFTemporal'])->name('notas.subir-pdf-temporal');
     Route::post('/generar-resumen-ai-temporal', [NotaController::class, 'generarResumenAITemporal'])->name('notas.generar-resumen-ai-temporal');
-    Route::get('/listar-modelos-gemini', [NotaController::class, 'listarModelosGemini']);
+    Route::get('/listar-modelos-gemini', [NotaController::class, 'listarModelosGemini'])->name('notas.listar-modelos-gemini');
 
-    // Ruta resource debe ir al final
-    Route::resource('notas', NotaController::class)->except(['show']);
+    // Ruta para ver una nota específica
+   // Route::get('/notas/{nota}', [NotaController::class, 'show'])->name('notas.show');
+
+    // Ruta resource para notas (sin excluir ningún método)
+    //Route::resource('notas', NotaController::class);
+
+   // Rutas de notas - Todas explícitas
+   Route::get('/notas', [NotaController::class, 'index'])->name('notas.index');
+   Route::get('/notas/create', [NotaController::class, 'create'])->name('notas.create');
+   Route::post('/notas', [NotaController::class, 'store'])->name('notas.store');
+   Route::get('/notas/{nota}', [NotaController::class, 'show'])->name('notas.show');
+   Route::get('/notas/{nota}/edit', [NotaController::class, 'edit'])->name('notas.edit');
+   Route::put('/notas/{nota}', [NotaController::class, 'update'])->name('notas.update');
+   Route::delete('/notas/{nota}', [NotaController::class, 'destroy'])->name('notas.destroy');
 });
 

@@ -5,11 +5,11 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h3 class="card-title m-0">Crear Nueva Nota</h3>
-                    <div class="card-tools">
-                        <a href="{{ route('notas.index') }}" class="btn btn-sm btn-outline-secondary" id="btnVolver">
-                            <i class="fas fa-arrow-left"></i> Volver
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center w-100">
+                        <h3 class="card-title m-0">Crear Nueva Nota</h3>
+                        <a href="{{ route('notas.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i> Volver
                         </a>
                     </div>
                 </div>
@@ -49,6 +49,24 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Campo para seleccionar destinatario -->
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="destinatario_id" class="small">Destinatario</label>
+                                    <select class="form-control form-control-sm" id="destinatario_id" name="destinatario_id" style="width: 100%;">
+                                        <option value="">Seleccionar destinatario (opcional)</option>
+                                        @foreach($usuarios as $usuario)
+                                            <option value="{{ $usuario->id }}">
+                                                {{ $usuario->name }} - {{ $usuario->organization ?? 'Sin organización' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="texto" class="small">Texto</label>
                             <textarea class="form-control form-control-sm" id="texto" name="texto" rows="3" style="resize: none;"></textarea>
@@ -114,7 +132,7 @@
                             </div>
                         </div>
                         <div class="d-flex justify-content-end mt-4">
-                            <button type="submit" class="btn btn-sm btn-primary mr-2" id="btnGuardar">
+                            <button type="button" class="btn btn-sm btn-primary mr-2" id="btnGuardar">
                                 <i class="fas fa-save mr-1"></i> Guardar
                             </button>
                             <a href="{{ route('notas.index') }}" class="btn btn-sm btn-outline-secondary" id="btnVolver">
@@ -142,7 +160,7 @@
                     <span class="sr-only">Cargando...</span>
                 </div>
                 <h5 class="mt-3" id="modalEsperaTitulo">Procesando...</h5>
-                <p id="modalEsperaMensaje">Por favor espere...</p>
+                <p id="modalEsperaMensaje">Por favor espere mientras se guarda la nota y se envía la notificación...</p>
             </div>
         </div>
     </div>
@@ -168,11 +186,42 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Éxito -->
+<div class="modal fade" id="modalExito" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="text-success mb-3" style="font-size: 3rem;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h5 class="mt-2" id="modalExitoTitulo">Nota guardada con éxito</h5>
+                <p id="modalExitoMensaje">La nota se ha guardado correctamente.</p>
+                @if(session('email_sent'))
+                    <p class="text-muted small">Se ha enviado una notificación por email al destinatario.</p>
+                @endif
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="btnRedirigir">
+                    <i class="fas fa-list mr-1"></i> Ver listado de notas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script>
 $(document).ready(function() {
+    // Inicializar Select2 para el selector de destinatario
+    $('#destinatario_id').select2({
+        theme: 'bootstrap4',
+        placeholder: "Seleccionar destinatario (opcional)",
+        allowClear: true,
+        width: '100%'
+    });
+
     // Bandera para detectar cambios
     let cambiosRealizados = false;
     let formSubmitted = false;
@@ -206,7 +255,7 @@ $(document).ready(function() {
             formData.append('_token', '{{ csrf_token() }}');
 
             $.ajax({
-                url: '/subir-pdf-temporal',
+                url: '{{ route("notas.subir-pdf-temporal") }}',
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -219,7 +268,7 @@ $(document).ready(function() {
                         $('#formNota').append('<input type="hidden" name="pdf_path_temp" value="' + response.path + '">');
                         $('#formNota').append('<input type="hidden" name="texto_pdf_temp" value="' + response.texto_pdf + '">');
                     } else {
-                        // Mostrar error en el modal en lugar de alert
+                        // Mostrar error en el modal
                         $('#modalEsperaTitulo').text('Error');
                         $('#modalEsperaMensaje').text(response.message);
                         $('#modalEspera').modal('show');
@@ -233,13 +282,19 @@ $(document).ready(function() {
                 },
                 error: function(xhr) {
                     $('#modalEspera').modal('hide');
-                    // Mostrar error en el modal en lugar de alert
+                    // Mostrar error en el modal
                     $('#modalEsperaTitulo').text('Error');
-                    $('#modalEsperaMensaje').text('Error al procesar el PDF. Por favor intente nuevamente.');
+                    let errorMessage = 'Error al procesar el PDF.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        errorMessage = xhr.responseText;
+                    }
+                    $('#modalEsperaMensaje').text(errorMessage);
                     $('#modalEspera').modal('show');
                     setTimeout(function() {
                         $('#modalEspera').modal('hide');
-                    }, 2000);
+                    }, 3000);
                     // Limpiar el input si hay error
                     $('#pdf').val('');
                     updateFileName($('#pdf')[0]);
@@ -254,7 +309,7 @@ $(document).ready(function() {
         var cantidadPalabras = $('#cantidad_palabras').val();
 
         if (!textoPDF) {
-            // Mostrar error en el modal en lugar de alert
+            // Mostrar error en el modal
             $('#modalEsperaTitulo').text('Advertencia');
             $('#modalEsperaMensaje').text('Primero debes cargar un PDF.');
             $('#modalEspera').modal('show');
@@ -285,7 +340,7 @@ $(document).ready(function() {
                     $('#formNota').append('<input type="hidden" name="resumen_ai_temp" value="' + response.resumen + '">');
                     cambiosRealizados = true;
                 } else {
-                    // Mostrar error en el modal en lugar de alert
+                    // Mostrar error en el modal
                     $('#modalEsperaTitulo').text('Error');
                     $('#modalEsperaMensaje').text(response.message);
                     $('#modalEspera').modal('show');
@@ -296,7 +351,7 @@ $(document).ready(function() {
             },
             error: function(xhr, status, error) {
                 $('#modalEspera').modal('hide');
-                // Mostrar error en el modal en lugar de alert
+                // Mostrar error en el modal
                 $('#modalEsperaTitulo').text('Error');
                 $('#modalEsperaMensaje').text('Error al generar el resumen AI.');
                 $('#modalEspera').modal('show');
@@ -307,9 +362,68 @@ $(document).ready(function() {
         });
     });
 
-    // Manejar el botón Guardar
-    $('#btnGuardar').on('click', function() {
+    // Manejar el envío del formulario con AJAX para mostrar el modal de espera
+    $('#btnGuardar').on('click', function(e) {
+        e.preventDefault();
         formSubmitted = true;
+
+        // Validar el formulario antes de enviar
+        if (!$('#formNota')[0].checkValidity()) {
+            $('#formNota')[0].reportValidity();
+            return;
+        }
+
+        // Mostrar modal de espera
+        $('#modalEsperaTitulo').text('Guardando Nota');
+        $('#modalEsperaMensaje').text('Por favor espere mientras se guarda la nota y se envía la notificación...');
+        $('#modalEspera').modal('show');
+
+        // Deshabilitar el botón de guardar para evitar múltiples envíos
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Guardando...');
+
+        // Enviar el formulario mediante AJAX
+        $.ajax({
+            url: $('#formNota').attr('action'),
+            type: 'POST',
+            data: new FormData($('#formNota')[0]),
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                // Ocultar modal de espera
+                $('#modalEspera').modal('hide');
+
+                // Mostrar modal de éxito
+                $('#modalExito').modal('show');
+
+                // Configurar el botón de redirección
+                $('#btnRedirigir').on('click', function() {
+                    window.location.href = response.redirect;
+                });
+            },
+            error: function(xhr) {
+                // Ocultar modal de espera
+                $('#modalEspera').modal('hide');
+
+                // Habilitar el botón de guardar
+                $('#btnGuardar').prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Guardar');
+
+                // Mostrar error en el modal
+                $('#modalEsperaTitulo').text('Error');
+                let errorMessage = 'Error al guardar la nota.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    errorMessage = xhr.responseText;
+                }
+                $('#modalEsperaMensaje').text(errorMessage);
+                $('#modalEspera').modal('show');
+
+                // Auto-ocultar el modal después de 3 segundos
+                setTimeout(function() {
+                    $('#modalEspera').modal('hide');
+                }, 3000);
+            }
+        });
     });
 
     // Manejar el botón Cancelar/Volver
@@ -346,8 +460,25 @@ $(document).ready(function() {
     .text-purple {
         color: #9c27b0;
     }
+    .select2-container--bootstrap4 .select2-selection--single {
+        height: calc(1.8125rem + 2px) !important;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.85rem !important;
+    }
+    /* Estilo adicional para el card-header */
+    .card-header {
+        padding: 0.75rem 1.25rem;
+    }
+    /* Estilo para el modal de éxito */
+    #modalExito .modal-content {
+        border: 2px solid #28a745;
+    }
+    #modalExito .fa-check-circle {
+        color: #28a745;
+    }
 </style>
 @endsection
+
 
 
 
