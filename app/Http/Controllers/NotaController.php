@@ -109,14 +109,22 @@ class NotaController extends Controller
 
     public function index()
     {
-        if (!auth()->user()->hasAnyRole(['admin', 'editor', 'consulta'])) {
-            abort(403, 'No tienes permiso para acceder a esta página');
+        // Obtener solo las notas donde el usuario es destinatario o es admin
+        if (auth()->user()->hasRole('admin')) {
+            $notas = Nota::with(['creador', 'destinatario'])->get();
+        } else {
+            $notas = Nota::with(['creador', 'destinatario'])
+                    ->where('destinatario_id', auth()->id())
+                    ->orWhere('user_id', auth()->id()) // También ver las notas que el usuario creó
+                    ->get();
         }
-        $notas = Nota::all();
+
         $tipos = Nota::select('Tipo')->distinct()->pluck('Tipo');
         $temas = Nota::select('Tema')->distinct()->pluck('Tema');
+
         return view('notas.index', compact('notas', 'tipos', 'temas'));
     }
+
 
     public function create()
     {

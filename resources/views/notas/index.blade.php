@@ -8,12 +8,14 @@
                 <div class="card-header">
                     <h3 class="card-title">Panel de Seguimiento de Notas</h3>
                     <div class="card-tools">
+                        @if(auth()->user()->hasRole('admin'))
                         <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#importModal">
                             <i class="fas fa-file-import"></i> Importar CSV
                         </button>
                         <button id="exportCSV" class="btn btn-sm btn-outline-info">
                             <i class="fas fa-file-export"></i> Exportar CSV
                         </button>
+                        @endif
                         <a href="{{ route('notas.create') }}" class="btn btn-sm btn-outline-success">
                             <i class="fas fa-plus"></i> Agregar Nota
                         </a>
@@ -41,6 +43,15 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="col-md-3">
+                            <label for="filtro-estado" class="small">Filtrar por Estado:</label>
+                            <select id="filtro-estado" class="form-control form-control-sm">
+                                <option value="">Todos los estados</option>
+                                <option value="ABIERTO">Abierto</option>
+                                <option value="CERRADO">Cerrado</option>
+                                <option value="PENDIENTE">Pendiente</option>
+                            </select>
+                        </div>
                     </div>
 
                     <!-- Tabla de Notas -->
@@ -60,13 +71,13 @@
                                     <th>Estado</th>
                                     <th>Link</th>
                                     <th>PDF</th>
-                                    <th>Destinatario</th>
+                                    <th>Creador</th>
                                     <th>Resumen AI</th>
                                     <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($notas as $nota)
+                                @forelse($notas as $nota)
                                     @php
                                         // Procesar la fecha para el atributo data
                                         $fechaData = '';
@@ -121,63 +132,83 @@
                                                 <span class="badge badge-secondary p-1" style="font-size: 0.7rem;">{{ $nota->Estado }}</span>
                                             @endif
                                         </td>
-
                                         <td class="text-center">
-                                            @if($nota->link)
-                                                <a href="{{ $nota->link }}" target="_blank" class="btn btn-xs btn-outline-info p-1">
-                                                    <i class="fas fa-link fa-sm"></i>
-                                                </a>
-                                            @endif
+                                            <div class="button-container">
+                                                @if($nota->link)
+                                                    <a href="{{ $nota->link }}" target="_blank" class="btn btn-action btn-outline-info" title="Ver enlace">
+                                                        <i class="fas fa-link fa-sm"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="text-center">
-                                            @if($nota->pdf_path)
-                                                <a href="{{ asset('storage/' . $nota->pdf_path) }}" target="_blank" class="btn btn-xs btn-outline-danger p-1" title="Ver PDF">
-                                                    <i class="fas fa-file-pdf fa-sm"></i>
-                                                </a>
-                                            @endif
+                                            <div class="button-container">
+                                                @if($nota->pdf_path)
+                                                    <a href="{{ asset('storage/' . $nota->pdf_path) }}" target="_blank" class="btn btn-action btn-outline-danger" title="Ver PDF">
+                                                        <i class="fas fa-file-pdf fa-sm"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
-                                            @if($nota->destinatario)
-                                                <span class="badge-destinatario badge-info" title="{{ $nota->destinatario->name }} - {{ $nota->destinatario->organization ?? 'Sin organización' }}">
-                                                    {{ Str::limit($nota->destinatario->name, 15) }}
+                                            @if($nota->creador)
+                                                <span class="badge-destinatario badge-primary" title="{{ $nota->creador->name }} - {{ $nota->creador->email }}">
+                                                    {{ Str::limit($nota->creador->name, 15) }}
                                                 </span>
                                             @else
-                                                <span class="badge-destinatario badge-secondary">Sin destinatario</span>
+                                                <span class="badge-destinatario badge-secondary">Sin creador</span>
                                             @endif
                                         </td>
-
                                         <td class="text-center">
-                                            <button type="button" class="btn btn-xs btn-outline-purple p-1" title="Ver Resumen AI" data-toggle="modal" data-target="#resumenAIModal{{ $nota->id }}">
-                                                <i class="fas fa-robot fa-sm"></i>
-                                            </button>
-                                        </td>
-                                        <td class="text-center">
-                                            <!-- Botón para ver la nota (siempre visible si tiene permisos) -->
-                                            <a href="{{ route('notas.show', $nota->id) }}" class="btn btn-xs btn-outline-primary p-1" title="Ver nota">
-                                                <i class="fas fa-eye fa-sm"></i>
-                                            </a>
-
-                                            <!-- Botón para editar (solo visible si es el creador o admin) -->
-                                            @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
-                                            <a href="{{ route('notas.edit', $nota->id) }}" class="btn btn-xs btn-outline-warning p-1" title="Editar">
-                                                <i class="fas fa-edit fa-sm"></i>
-                                            </a>
-                                            @endif
-
-                                            <!-- Formulario para eliminar (solo visible si es el creador o admin) -->
-                                            @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
-                                            <form action="{{ route('notas.destroy', $nota->id) }}" method="POST" style="display:inline;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-xs btn-outline-danger p-1" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta nota?')">
-                                                    <i class="fas fa-trash fa-sm"></i>
+                                            <div class="button-container">
+                                                <button type="button" class="btn btn-action btn-outline-purple" title="Ver Resumen AI" data-toggle="modal" data-target="#resumenAIModal{{ $nota->id }}">
+                                                    <i class="fas fa-robot fa-sm"></i>
                                                 </button>
-                                            </form>
-                                            @endif
+                                            </div>
                                         </td>
+                                        <td class="text-center">
+                                            <div class="action-buttons">
+                                                <!-- Botón para ver la nota (siempre visible) -->
+                                                <a href="{{ route('notas.show', $nota->id) }}" class="btn btn-action btn-outline-primary" title="Ver nota">
+                                                    <i class="fas fa-eye fa-sm"></i>
+                                                </a>
 
+                                                <!-- Botón para responder (solo si el usuario es el destinatario) -->
+                                                @if(auth()->user()->id === $nota->destinatario_id)
+                                                <a href="{{ route('notas.edit', $nota->id) }}" class="btn btn-action btn-outline-success" title="Responder">
+                                                    <i class="fas fa-reply fa-sm"></i>
+                                                </a>
+                                                @endif
+
+                                                <!-- Botón para editar (solo visible si es el creador o admin) -->
+                                                @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
+                                                <a href="{{ route('notas.edit', $nota->id) }}" class="btn btn-action btn-outline-warning" title="Editar">
+                                                    <i class="fas fa-edit fa-sm"></i>
+                                                </a>
+                                                @endif
+
+                                                <!-- Formulario para eliminar (solo visible si es el creador o admin) -->
+                                                @if(auth()->user()->id === $nota->user_id || auth()->user()->hasRole('admin'))
+                                                <form action="{{ route('notas.destroy', $nota->id) }}" method="POST" style="display:inline;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-action btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar esta nota?')">
+                                                        <i class="fas fa-trash fa-sm"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
+                                            </div>
+                                        </td>
                                     </tr>
-                                @endforeach
+                                @empty
+                                    <tr>
+                                        <td colspan="14" class="text-center">
+                                            <div class="alert alert-info mb-0">
+                                                No se encontraron notas asignadas a ti.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -199,6 +230,7 @@
 <!-- /.container-fluid -->
 
 <!-- Modal para Importar CSV -->
+@if(auth()->user()->hasRole('admin'))
 <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -238,6 +270,7 @@
         </div>
     </div>
 </div>
+@endif
 
 @foreach($notas as $nota)
 <!-- Modal para Resumen AI -->
@@ -270,7 +303,153 @@
     </div>
 </div>
 @endforeach
+@endsection
 
+@section('styles')
+<style>
+    /* Estilos para la tabla */
+    #tabla-notas {
+        width: 100% !important;
+    }
+
+    /* Centrar todos los encabezados de la tabla */
+    #tabla-notas th {
+        text-align: center !important;
+        vertical-align: middle !important;
+        padding: 0.5rem !important;
+    }
+
+    /* Centrar el contenido de todas las celdas */
+    #tabla-notas td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 0.5rem;
+    }
+
+    /* Excepciones para columnas que no deben estar centradas */
+    #tabla-notas td:nth-child(4), /* Tema */
+    #tabla-notas td:nth-child(5), /* Texto */
+    #tabla-notas td:nth-child(8), /* Observaciones */
+    #tabla-notas td:nth-child(12) /* Creador */ {
+        text-align: left;
+    }
+
+    /* Contenedor para centrar los botones */
+    .button-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    /* Estilo común para todos los botones de acción */
+    .btn-action {
+        width: 1.8rem !important;
+        height: 1.8rem !important;
+        padding: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 0.25rem !important;
+        font-size: 0.7rem !important;
+        border-width: 1px !important;
+    }
+
+    .btn-action i {
+        font-size: 0.7rem !important;
+        margin: 0 !important;
+    }
+
+    /* Estilo específico para el botón de Resumen AI */
+    .btn-outline-purple {
+        border-color: #9c27b0 !important;
+        color: #9c27b0 !important;
+        background-color: transparent !important;
+    }
+
+    .btn-outline-purple:hover {
+        background-color: #9c27b0 !important;
+        color: white !important;
+    }
+
+    /* Estilos para los botones de acciones */
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    /* Ajustar el ancho de la columna de acciones */
+    #tabla-notas th:last-child,
+    #tabla-notas td:last-child {
+        width: 120px;
+        min-width: 120px;
+    }
+
+    /* Ajustar el ancho de las columnas de botones */
+    #tabla-notas th:nth-child(10), /* Link */
+    #tabla-notas td:nth-child(10),
+    #tabla-notas th:nth-child(11), /* PDF */
+    #tabla-notas td:nth-child(11),
+    #tabla-notas th:nth-child(13), /* Resumen AI */
+    #tabla-notas td:nth-child(13) {
+        width: 60px;
+        min-width: 60px;
+    }
+
+    /* Estilos ESPECÍFICOS para los badges de estado en esta vista */
+    .badge-estado {
+        display: inline-block;
+        padding: 0.25em 0.5em;
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+        min-width: 60px;
+    }
+
+    .badge-estado.success {
+        color: #fff;
+        background-color: #28a745;
+    }
+
+    .badge-estado.warning {
+        color: #212529;
+        background-color: #ffc107;
+    }
+
+    .badge-estado.secondary {
+        color: #fff;
+        background-color: #6c757d;
+    }
+
+    /* Estilo para los badges de destinatario/creador */
+    .badge-destinatario {
+        display: inline-block;
+        padding: 0.25em 0.5em;
+        font-size: 0.7rem;
+        font-weight: 500;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+
+    .badge-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Estilo para el mensaje de "no hay notas" */
+    #tabla-notas tbody tr td[colspan="14"] {
+        padding: 2rem !important;
+    }
+</style>
 @endsection
 
 @section('scripts')
@@ -284,17 +463,17 @@ $(document).ready(function() {
     var table = $('#tabla-notas').DataTable({
         "language": {
             "decimal": "",
-            "emptyTable": "No hay datos disponibles en la tabla",
-            "info": "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-            "infoEmpty": "Mostrando 0 a 0 de 0 entradas",
-            "infoFiltered": "(filtrado de _MAX_ entradas totales)",
+            "emptyTable": "No hay notas asignadas a ti",
+            "info": "Mostrando _START_ a _END_ de _TOTAL_ notas",
+            "infoEmpty": "Mostrando 0 a 0 de 0 notas",
+            "infoFiltered": "(filtrado de _MAX_ notas totales)",
             "infoPostFix": "",
             "thousands": ",",
-            "lengthMenu": "Mostrar _MENU_ entradas",
+            "lengthMenu": "Mostrar _MENU_ notas",
             "loadingRecords": "Cargando...",
             "processing": "Procesando...",
             "search": "Buscar:",
-            "zeroRecords": "No se encontraron registros coincidentes",
+            "zeroRecords": "No se encontraron notas asignadas a ti",
             "paginate": {
                 "first": "Primero",
                 "last": "Último",
@@ -310,6 +489,22 @@ $(document).ready(function() {
         "order": [[0, 'desc']],
         "pageLength": 10,
         "lengthMenu": [10, 25, 50, 100],
+        "columnDefs": [
+            {
+                "targets": [0, 1, 2, 6, 9, 10, 11, 13], // Columnas que deben estar centradas
+                "className": "text-center"
+            },
+            {
+                "targets": -1, // Última columna (Acciones)
+                "className": "text-center",
+                "width": "120px",
+                "orderable": false
+            },
+            {
+                "targets": [4, 7, 12], // Columnas de texto
+                "className": "text-left"
+            }
+        ],
         "initComplete": function() {
             // Resaltar filas al hacer clic
             $('#tabla-notas tbody').on('click', 'tr', function() {
@@ -319,6 +514,24 @@ $(document).ready(function() {
         }
     });
 
+    // Añadir filtro por estado
+    $('#filtro-estado').on('change', function() {
+        if ($(this).val() === "") {
+            table.column(9).search("").draw();
+        } else {
+            table.column(9).search($(this).val()).draw();
+        }
+    });
+
+    // Filtros existentes
+    $('#filtro-tema').on('change', function() {
+        table.column(3).search(this.value).draw();
+    });
+
+    $('#filtro-tipo').on('change', function() {
+        table.column(1).search(this.value).draw();
+    });
+
     // Función para exportar a CSV
     $('#exportCSV').on('click', function() {
         // Obtener los datos filtrados de la tabla
@@ -326,7 +539,7 @@ $(document).ready(function() {
 
         // Crear array para el CSV
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "ID;Tipo;Nro;Tema;Texto;Fecha;Rta a NP;Respondida por;Observaciones;Estado;Link;Destinatario;Resumen AI\n";
+        csvContent += "ID;Tipo;Nro;Tema;Texto;Fecha;Rta a NP;Respondida por;Observaciones;Estado;Link;Creador;Resumen AI\n";
 
         // Procesar cada fila
         $(rows).each(function(index, row) {
@@ -342,11 +555,11 @@ $(document).ready(function() {
             const rta_np = $row.data('rta-np');
             const respondida_por = $row.data('respondida-por');
             const observaciones = $row.data('observaciones');
-            const estado = $row.data('estado');
+            const estado = $row.find('td:nth-child(10)').text().trim();
 
-            // Obtener destinatario y resumen AI de la fila
-            const destinatario = $row.find('td:nth-child(12)').text().trim();
-            const resumenAI = $row.find('td:nth-child(13) button').attr('title') === 'Ver Resumen AI' ? 'Sí' : 'No';
+            // Obtener creador y resumen AI de la fila
+            const creador = $row.find('td:nth-child(12)').text().trim();
+            const resumenAI = $row.find('td:nth-child(13) button').length > 0 ? 'Sí' : 'No';
 
             // Escapar valores para CSV
             const escapeCsv = (value) => {
@@ -374,7 +587,7 @@ $(document).ready(function() {
                 escapeCsv(observaciones),
                 escapeCsv(estado),
                 escapeCsv(''), // Link
-                escapeCsv(destinatario),
+                escapeCsv(creador),
                 escapeCsv(resumenAI)
             ].join(';');
 
@@ -385,7 +598,7 @@ $(document).ready(function() {
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "notas_export_" + new Date().toISOString().slice(0, 10) + ".csv");
+        link.setAttribute("download", "mis_notas_export_" + new Date().toISOString().slice(0, 10) + ".csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -454,163 +667,9 @@ $(document).ready(function() {
             }
         });
     });
-
-    // Filtros
-    $('#filtro-tema').on('change', function() {
-        table.column(3).search(this.value).draw();
-    });
-
-    $('#filtro-tipo').on('change', function() {
-        table.column(1).search(this.value).draw();
-    });
 });
 </script>
-@section('styles')
-<style>
-    /* Estilos para la tabla */
-    #tabla-notas {
-        width: 100% !important;
-    }
-
-    /* Centrar todos los encabezados de la tabla */
-    #tabla-notas th {
-        text-align: center !important;
-        vertical-align: middle !important;
-        padding: 0.5rem !important;
-    }
-
-    /* Centrar el contenido de todas las celdas */
-    #tabla-notas td {
-        text-align: center;
-        vertical-align: middle;
-        padding: 0.5rem;
-    }
-
-    /* Excepciones para columnas que no deben estar centradas */
-    #tabla-notas td:nth-child(4), /* Tema */
-    #tabla-notas td:nth-child(5), /* Texto */
-    #tabla-notas td:nth-child(8), /* Observaciones */
-    #tabla-notas td:nth-child(12) /* Destinatario */ {
-        text-align: left;
-    }
-
-    /* Estilos para los botones de acciones */
-    .btn-group-actions {
-        display: flex;
-        flex-wrap: nowrap;
-        justify-content: center;
-        gap: 0.25rem;
-        align-items: center;
-    }
-
-    .btn-group-actions .btn {
-        min-width: 2.2rem;
-        padding: 0.2rem 0.3rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    /* Ajustar el ancho de la columna de acciones */
-    #tabla-notas th:last-child,
-    #tabla-notas td:last-child {
-        width: 120px;
-        min-width: 120px;
-    }
-
-    /* Estilos para los iconos de PDF y Link */
-    #tabla-notas td:nth-child(10), /* Link */
-    #tabla-notas td:nth-child(11)  /* PDF */ {
-        padding: 0.3rem !important;
-    }
-
-    /* Estilos para los botones de acciones */
-    .btn-xs {
-        padding: 0.2rem 0.4rem;
-        font-size: 0.7rem;
-        line-height: 1.2;
-    }
-
-    .btn-xs i {
-        font-size: 0.8em;
-        margin: 0 !important;
-    }
-
-    /* Estilos para los botones personalizados */
-    .btn-outline-purple {
-        border-color: #9c27b0;
-        color: #9c27b0;
-    }
-
-    .btn-outline-purple:hover {
-        background-color: #9c27b0;
-        color: white;
-    }
-
-    /* Estilo para resaltar filas */
-    #tabla-notas tbody tr.table-active {
-        background-color: rgba(0, 123, 255, 0.1) !important;
-        font-weight: 500;
-    }
-
-    /* Estilo para las celdas de texto */
-    #tabla-notas td:nth-child(5) { /* Texto */
-        max-width: 200px;
-        white-space: normal;
-        word-wrap: break-word;
-    }
-
-    /* Estilo para las celdas de observaciones */
-    #tabla-notas td:nth-child(8) { /* Observaciones */
-        max-width: 150px;
-        white-space: normal;
-        word-wrap: break-word;
-    }
-
-    /* Estilos ESPECÍFICOS para los badges de estado en esta vista */
-    .badge-estado {
-        display: inline-block;
-        padding: 0.25em 0.5em;
-        font-size: 0.7rem;
-        font-weight: 500;
-        line-height: 1;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: baseline;
-        border-radius: 0.25rem;
-        min-width: 60px;
-    }
-
-    .badge-estado.success {
-        color: #fff;
-        background-color: #28a745;
-    }
-
-    .badge-estado.warning {
-        color: #212529;
-        background-color: #ffc107;
-    }
-
-    .badge-estado.secondary {
-        color: #fff;
-        background-color: #6c757d;
-    }
-
-    /* Estilo para los badges de destinatario */
-    .badge-destinatario {
-        display: inline-block;
-        padding: 0.25em 0.5em;
-        font-size: 0.7rem;
-        font-weight: 500;
-        line-height: 1;
-        text-align: center;
-        white-space: nowrap;
-        vertical-align: baseline;
-        border-radius: 0.25rem;
-    }
-</style>
 @endsection
 
-@endsection
 
 
