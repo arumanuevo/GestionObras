@@ -228,7 +228,7 @@
                                         <!-- Bandeja de entrada para inspectores -->
                                         @if($esInspector)
                                         <div class="tool-item">
-                                            <a href="{{ route('obras.notas.bandeja', ['obra' => $obra->id]) }}" class="tool-btn btn-danger position-relative" title="Bandeja de Entrada">
+                                            <a href="{{ route('obras.notas-pedido.index', ['obra' => $obra->id]) }}" class="tool-btn btn-danger position-relative" title="Bandeja de Entrada">
                                                 <div class="tool-icon">
                                                     <i class="fas fa-inbox"></i>
                                                     @php

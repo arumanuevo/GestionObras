@@ -49,8 +49,7 @@
         justify-content: center !important;
     }
 
-    /* Estilos adicionales omitidos por brevedad... */
-
+    /* Estilos adicionales */
     /* Estilo para los badges */
     .badge-estado {
         font-size: 0.85rem;
@@ -189,6 +188,25 @@
         padding: 0.2em 0.4em;
         margin-left: 0.3rem;
     }
+
+    /* Estilo para los botones de acción */
+    .btn-action {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        margin: 0 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 32px;
+        height: 32px;
+    }
+
+    /* Estilo para el grupo de botones */
+    .btn-group-action {
+        display: flex;
+        justify-content: center;
+        gap: 4px;
+    }
 </style>
 @endsection
 
@@ -242,6 +260,7 @@
                                     @php
                                         $nota = $grupo['nota'];
                                         $destinatarios = $grupo['destinatarios'];
+                                        $user = auth()->user();
                                     @endphp
                                     <tr class="
                                         @if($nota->Estado == 'Respondida con OS') nota-respondida
@@ -322,29 +341,29 @@
                                             </div>
                                         </td>
                                         <td style="vertical-align: middle;">
-                                            <div class="d-flex justify-content-center">
+                                            <div class="btn-group-action">
                                                 <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
-                                                   class="btn btn-sm btn-outline-primary mr-1 btn-ver"
-                                                   title="Ver nota"
-                                                   style="font-size: 0.75rem;"
-                                                   data-toggle="tooltip" data-placement="top" title="Ver detalles de la nota">
+                                                   class="btn btn-sm btn-outline-primary btn-action"
+                                                   title="Ver nota">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
+
                                                 @if($nota->Estado == 'Pendiente de Firma' && ($user->hasRole('admin') || ($user->id == $nota->destinatario_id)))
-                                                <a href="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}"
-                                                   class="btn btn-sm btn-outline-success"
-                                                   title="Firmar nota"
-                                                   style="font-size: 0.75rem;"
-                                                   data-toggle="tooltip" data-placement="top" title="Firmar esta nota">
+                                                <form id="firmar-form-{{ $nota->id }}" action="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}" method="POST" style="display: none;">
+                                                    @csrf
+                                                </form>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-success btn-action"
+                                                        title="Firmar nota"
+                                                        onclick="event.preventDefault(); document.getElementById('firmar-form-{{ $nota->id }}').submit();">
                                                     <i class="fas fa-signature"></i>
-                                                </a>
+                                                </button>
                                                 @endif
+
                                                 @if($user->id == $nota->user_id || $user->hasRole('admin'))
                                                 <a href="{{ route('obras.notas-pedido.edit', [$obra->id, $nota->id]) }}"
-                                                   class="btn btn-sm btn-outline-warning"
-                                                   title="Editar nota"
-                                                   style="font-size: 0.75rem;"
-                                                   data-toggle="tooltip" data-placement="top" title="Editar esta nota">
+                                                   class="btn btn-sm btn-outline-warning btn-action"
+                                                   title="Editar nota">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                                 @endif
@@ -372,10 +391,10 @@
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
 
 <script>
@@ -394,16 +413,16 @@ $(document).ready(function() {
         },
         columnDefs: [
             { className: 'control', orderable: false, targets: 0 },
-            { responsivePriority: 1, targets: 0 },
-            { responsivePriority: 2, targets: 1 },
-            { responsivePriority: 3, targets: 2 },
-            { responsivePriority: 4, targets: 3 },
-            { responsivePriority: 5, targets: 4 },
-            { responsivePriority: 6, targets: 5 },
-            { orderable: false, targets: 6 },
-            { className: 'text-center', targets: [0, 2, 3, 6] }
+            { responsivePriority: 1, targets: 1 }, // N°
+            { responsivePriority: 2, targets: 2 }, // Tema
+            { responsivePriority: 3, targets: 3 }, // Fecha
+            { responsivePriority: 4, targets: 4 }, // Estado
+            { responsivePriority: 5, targets: 5 }, // Creador
+            { responsivePriority: 6, targets: 6 }, // Destinatarios
+            { orderable: false, targets: 7 },      // Acciones
+            { className: 'text-center', targets: [0, 3, 4, 7] } // Centrar columnas específicas
         ],
-        order: [[2, 'desc']],
+        order: [[3, 'desc']], // Ordenar por fecha de forma descendente por defecto
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
             buttons: {
@@ -429,7 +448,7 @@ $(document).ready(function() {
                 text: '<i class="fas fa-copy"></i> Copiar',
                 className: 'btn btn-sm btn-dt-custom',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             },
             {
@@ -437,7 +456,7 @@ $(document).ready(function() {
                 text: '<i class="fas fa-file-excel"></i> Excel',
                 className: 'btn btn-sm btn-dt-custom',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 }
             },
             {
@@ -445,10 +464,10 @@ $(document).ready(function() {
                 text: '<i class="fas fa-file-pdf"></i> PDF',
                 className: 'btn btn-sm btn-dt-custom',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 },
                 customize: function(doc) {
-                    doc.content[1].table.widths = ['10%', '30%', '12%', '12%', '18%', '18%', '10%'];
+                    doc.content[1].table.widths = ['10%', '20%', '12%', '12%', '18%', '18%', '10%'];
                     doc.styles.tableHeader.alignment = 'center';
                     doc.defaultStyle.alignment = 'left';
                     doc.pageMargins = [20, 20, 20, 20];
@@ -463,7 +482,7 @@ $(document).ready(function() {
                 text: '<i class="fas fa-print"></i> Imprimir',
                 className: 'btn btn-sm btn-dt-custom',
                 exportOptions: {
-                    columns: [0, 1, 2, 3, 4, 5]
+                    columns: [0, 1, 2, 3, 4, 5, 6]
                 },
                 customize: function(win) {
                     $(win.document.body).find('h1').css('text-align', 'center');
@@ -478,7 +497,7 @@ $(document).ready(function() {
                 extend: 'colvis',
                 text: '<i class="fas fa-columns"></i> Columnas',
                 className: 'btn btn-sm btn-dt-custom',
-                columns: [0, 1, 2, 3, 4, 5]
+                columns: [0, 1, 2, 3, 4, 5, 6]
             }
         ],
         drawCallback: function() {
@@ -505,9 +524,6 @@ $(document).ready(function() {
 
     // Ajustar el estilo del select de columnas
     $('.dt-button-collection').addClass('shadow-sm');
-
-    // Añadir mensaje informativo sobre los tooltips
-    $('.alert-info').text('Se muestran todas las notas de pedido de esta obra. Las notas que has creado tú aparecen con un badge azul. Pasa el cursor sobre los iconos de destinatarios para ver los detalles.');
 });
 </script>
 @endsection

@@ -782,7 +782,7 @@ public function firmar(Obra $obra, Nota $nota)
         'Rta_a_NP' => now(),
     ]);
 
-    return redirect()->route('obras.notas.bandeja', $obra->id)
+    return redirect()->route('obras.notas-pedido.index', $obra->id)
         ->with('success', 'Nota de pedido firmada con éxito.');
 }
 
