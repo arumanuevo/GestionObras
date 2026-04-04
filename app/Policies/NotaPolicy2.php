@@ -6,7 +6,7 @@ use App\Models\Nota;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class NotaPolicy
+class NotaPolicy2
 {
     use HandlesAuthorization;
 

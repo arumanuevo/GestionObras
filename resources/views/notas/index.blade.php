@@ -344,35 +344,35 @@
 @endif
 
 @foreach($notas as $nota)
-<!-- Modal para Resumen AI -->
-<div class="modal fade" id="resumenAIModal{{ $nota->id }}" tabindex="-1" role="dialog" aria-labelledby="resumenAIModalLabel{{ $nota->id }}" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title" id="resumenAIModalLabel{{ $nota->id }}">Resumen AI - Nota #{{ $nota->id }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                @if($nota->resumen_ai)
-                    <div class="card">
-                        <div class="card-body">
-                            <p class="card-text">{{ $nota->resumen_ai }}</p>
+    <!-- Modal para Resumen AI -->
+    <div class="modal fade" id="resumenAIModal{{ $nota->id }}" tabindex="-1" role="dialog" aria-labelledby="resumenAIModalLabel{{ $nota->id }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="resumenAIModalLabel{{ $nota->id }}">Resumen AI - Nota #{{ $nota->id }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    @if($nota->resumen_ai)
+                        <div class="card">
+                            <div class="card-body">
+                                <p class="card-text">{{ $nota->resumen_ai }}</p>
+                            </div>
                         </div>
-                    </div>
-                @else
-                    <div class="alert alert-info">
-                        No hay resumen AI disponible para esta nota.
-                    </div>
-                @endif
-            </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    @else
+                        <div class="alert alert-info">
+                            No hay resumen AI disponible para esta nota.
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 @endforeach
 @endsection
 
@@ -693,6 +693,7 @@
 <script>
 $(document).ready(function() {
     // Mostrar la tabla cuando los datos estén cargados
+    $.fn.dataTable.ext.errMode = 'throw';
     $('#tableContainer').show();
     $('#loadingIndicator').hide();
 

@@ -8,7 +8,6 @@
                 <div class="card-header bg-light">
                     <h3 class="card-title m-0" style="font-size: 1.1rem;">Editar Usuario</h3>
                 </div>
-                <!-- /.card-header -->
                 <div class="card-body">
                     <form action="{{ route('users.update', $user) }}" method="POST">
                         @csrf
@@ -57,19 +56,27 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label style="font-size: 0.85rem;">Rol</label>
+                            <label style="font-size: 0.85rem;">Rol en el Sistema</label>
                             <div class="d-flex flex-wrap">
-                                @foreach($roles as $role)
+                                @php
+                                    // Filtrar solo los roles de sistema (admin y user)
+                                    $systemRoles = $roles->whereIn('name', ['admin', 'user']);
+                                    // Obtener el rol actual del usuario
+                                    $currentRole = $user->roles->first();
+                                    // Verificar si el usuario actual es admin y está editando su propio perfil
+                                    $isSelfAdmin = auth()->user()->id === $user->id && $currentRole && $currentRole->name === 'admin';
+                                @endphp
+                                @foreach($systemRoles as $role)
                                 <div class="form-check mr-3">
                                     <input class="form-check-input" type="radio" name="role" value="{{ $role->id }}" id="role{{ $role->id }}"
-                                           @if(old('role', $user->roles->first()->id ?? null) == $role->id) checked @endif>
+                                           @if(old('role', $currentRole ? $currentRole->id : null) == $role->id) checked @endif
+                                           @if($isSelfAdmin && $role->name === 'user') disabled @endif>
                                     <label class="form-check-label" for="role{{ $role->id }}" style="font-size: 0.85rem;">
                                         <span class="badge badge-pill
                                             @if($role->name == 'admin') badge-danger
-                                            @elseif($role->name == 'editor') badge-primary
                                             @else badge-info @endif
                                             px-2 py-1">
-                                            {{ $role->name }}
+                                            {{ ucfirst($role->name) }}
                                         </span>
                                     </label>
                                 </div>
@@ -80,6 +87,11 @@
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
+                            @if($isSelfAdmin)
+                                <div class="alert alert-warning mt-2" style="font-size: 0.8rem; padding: 0.5rem;">
+                                    <i class="fas fa-exclamation-triangle"></i> No puedes cambiar tu propio rol de Admin a User para evitar dejar el sistema sin administradores.
+                                </div>
+                            @endif
                         </div>
                         <div class="form-group">
                             <div class="custom-control custom-switch">
@@ -91,6 +103,13 @@
                                 Si desactivas esta opción, el usuario no podrá acceder al sistema hasta que sea aprobado nuevamente.
                             </small>
                         </div>
+                        <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Roles en el Sistema:</strong><br>
+                            - <strong>Admin:</strong> Tiene acceso total a todas las funciones del sistema, incluyendo la gestión de usuarios, obras, y configuraciones globales.<br>
+                            - <strong>User:</strong> Tiene acceso limitado y solo puede interactuar con las obras a las que ha sido asignado.<br><br>
+                            <strong>Roles en la Obra:</strong> Los roles específicos de cada obra (como Jefe de Obra, Asistente Contratista, Inspector Principal, etc.) se asignan al agregar al usuario a una obra.
+                        </div>
                         <div class="d-flex justify-content-end mt-4">
                             <a href="{{ route('users.index') }}" class="btn btn-sm btn-secondary mr-2" style="font-size: 0.85rem;">
                                 <i class="fas fa-times mr-1"></i> Cancelar
@@ -101,13 +120,8 @@
                         </div>
                     </form>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
         </div>
-        <!-- /.col -->
     </div>
-    <!-- /.row -->
 </div>
-<!-- /.container-fluid -->
 @endsection

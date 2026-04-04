@@ -309,12 +309,70 @@ return [
             'type' => 'fullscreen-widget',
             'topnav_right' => true,
         ],
-
+    
         // Sidebar items:
         [
             'type' => 'sidebar-menu-search',
             'text' => 'search',
         ],
+    
+        // Obras
+        [
+            'text' => 'obras',
+            'icon' => 'fas fa-fw fa-hard-hat',
+            'url' => 'obras',
+            'can' => 'view-obras',
+        ],
+    
+        // Notas de Pedido
+        [
+            'text' => 'notas_de_pedido',
+            'icon' => 'fas fa-fw fa-file-alt',
+            'url' => '#',
+            'can' => 'view-notas-pedido',
+            'submenu' => [
+                [
+                    'text' => 'todas_las_notas',
+                    'url' => 'notas',
+                    'icon' => 'fas fa-fw fa-list',
+                ],
+                [
+                    'text' => 'nueva_nota',
+                    'url' => 'notas/create',
+                    'icon' => 'fas fa-fw fa-plus',
+                ],
+            ],
+        ],
+    
+        // Órdenes de Servicio
+        [
+            'text' => 'ordenes_de_servicio',
+            'icon' => 'fas fa-fw fa-clipboard-list',
+            'url' => '#',
+            'can' => 'view-ordenes-servicio',
+            'submenu' => [
+                [
+                    'text' => 'todas_las_ordenes',
+                    'url' => 'ordenes-servicio',
+                    'icon' => 'fas fa-fw fa-list',
+                ],
+                [
+                    'text' => 'nueva_orden',
+                    'url' => 'ordenes-servicio/create',
+                    'icon' => 'fas fa-fw fa-plus',
+                ],
+            ],
+        ],
+    
+        // Libro de Obra
+        [
+            'text' => 'libro_de_obra',
+            'icon' => 'fas fa-fw fa-book',
+            'url' => 'libro-obra',
+            'can' => 'view-libro-obra',
+        ],
+    
+        // Menú anterior
         [
             'text' => 'blog',
             'url' => 'admin/blog',
@@ -327,55 +385,27 @@ return [
             'label' => 4,
             'label_color' => 'success',
         ],
+    
         ['header' => 'account_settings'],
         [
             'text' => 'profile',
-            'url' => 'admin/settings',
+            'url' => 'profile',
             'icon' => 'fas fa-fw fa-user',
         ],
         [
             'text' => 'change_password',
-            'url' => 'admin/settings',
+            'url' => 'password/change',
             'icon' => 'fas fa-fw fa-lock',
         ],
+    
+        ['header' => 'administracion'],
         [
-            'text' => 'multilevel',
-            'icon' => 'fas fa-fw fa-share',
-            'submenu' => [
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                    'submenu' => [
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'level_two',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'level_three',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'level_one',
-                    'url' => '#',
-                ],
-            ],
+            'text' => 'usuarios',
+            'url' => 'users',
+            'icon' => 'fas fa-fw fa-users',
+            'can' => 'manage-users',
         ],
+    
         ['header' => 'labels'],
         [
             'text' => 'important',
@@ -393,6 +423,8 @@ return [
             'url' => '#',
         ],
     ],
+    
+    
 
     /*
     |--------------------------------------------------------------------------

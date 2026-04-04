@@ -8,7 +8,6 @@
                 <div class="card-header bg-light">
                     <h3 class="card-title m-0" style="font-size: 1.1rem;">Crear Nuevo Usuario</h3>
                 </div>
-                <!-- /.card-header -->
                 <div class="card-body">
                     <form action="{{ route('users.store') }}" method="POST">
                         @csrf
@@ -56,32 +55,39 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="roles" style="font-size: 0.85rem;">Roles</label>
+                            <label style="font-size: 0.85rem;">Rol en el Sistema</label>
                             <div class="d-flex flex-wrap">
+                                @php
+                                    $userRole = $roles->where('name', 'user')->first();
+                                @endphp
                                 @foreach($roles as $role)
                                 <div class="form-check mr-3">
-                                    <input class="form-check-input" type="checkbox" name="roles[]" value="{{ $role->id }}" id="role{{ $role->id }}"
-                                           @if(old('roles') && in_array($role->id, old('roles'))) checked @endif>
+                                    <input class="form-check-input" type="radio" name="role" value="{{ $role->id }}" id="role{{ $role->id }}"
+                                           @if(old('role', $userRole ? $userRole->id : null) == $role->id) checked @endif>
                                     <label class="form-check-label" for="role{{ $role->id }}" style="font-size: 0.85rem;">
                                         <span class="badge badge-pill
                                             @if($role->name == 'admin') badge-danger
-                                            @elseif($role->name == 'editor') badge-primary
                                             @else badge-info @endif
                                             px-2 py-1">
-                                            {{ $role->name }}
+                                            {{ ucfirst($role->name) }}
                                         </span>
                                     </label>
                                 </div>
                                 @endforeach
                             </div>
-                            @error('roles')
+                            @error('role')
                                 <span class="invalid-feedback d-block" role="alert" style="font-size: 0.8rem;">
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
                         </div>
                         <div class="alert alert-info mt-3" style="font-size: 0.85rem;">
-                            <i class="fas fa-info-circle"></i> El nuevo usuario será creado con estado "Pendiente de aprobación" y no podrá acceder al sistema hasta que un administrador lo apruebe.
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Roles en el Sistema:</strong><br>
+                            - <strong>Admin:</strong> Tiene acceso total a todas las funciones del sistema, incluyendo la gestión de usuarios, obras, y configuraciones globales.<br>
+                            - <strong>User:</strong> Tiene acceso limitado y solo puede interactuar con las obras a las que ha sido asignado.<br><br>
+                            <strong>Roles en la Obra:</strong> Los roles específicos de cada obra (como Jefe de Obra, Asistente Contratista, Inspector Principal, etc.) se asignan al agregar al usuario a una obra.<br>
+                            <strong>Nota:</strong> El nuevo usuario será creado con estado "Pendiente de aprobación" y no podrá acceder al sistema hasta que un administrador lo apruebe. El rol "User" está seleccionado por defecto.
                         </div>
                         <div class="d-flex justify-content-end mt-4">
                             <a href="{{ route('users.index') }}" class="btn btn-sm btn-secondary mr-2" style="font-size: 0.85rem;">
@@ -93,14 +99,10 @@
                         </div>
                     </form>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
         </div>
-        <!-- /.col -->
     </div>
-    <!-- /.row -->
 </div>
-<!-- /.container-fluid -->
 @endsection
+
 

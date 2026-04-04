@@ -1,5 +1,6 @@
 <?php
 
+// app/Mail/NotaCreada.php
 namespace App\Mail;
 
 use App\Models\Nota;
@@ -31,7 +32,10 @@ class NotaCreada extends Mailable
                         'nota' => $this->nota,
                         'creador' => $this->creador,
                         'destinatario' => $this->destinatario,
-                        'url' => url('/notas/' . $this->nota->id)
+                        'url' => route('obras.notas-pedido.show', [
+                            'obra' => $this->nota->obra_id,
+                            'nota' => $this->nota->id
+                        ])
                     ]);
     }
 }

@@ -126,17 +126,18 @@ class NotaController extends Controller
     }
 
 
-    public function create()
+   /* public function create()
     {
         $usuarios = User::where('approved', true)
                        ->where('id', '!=', auth()->id())
                        ->get(['id', 'name', 'first_name', 'last_name', 'organization']);
     
-        return view('notas.create', compact('usuarios'));
+        //return view('notas.create', compact('usuarios'));
+        return view('notas.create', compact('usuarios', 'obra'));
     }
     
 
-    public function store(Request $request)
+    public function store(Request $request, Obra $obra = null)
     {
         $validated = $request->validate([
             'Tipo' => 'required|string|max:50',
@@ -150,107 +151,92 @@ class NotaController extends Controller
             'Estado' => 'nullable|string|max:50',
             'link' => 'nullable|string|max:255',
             'pdf' => 'nullable|mimes:pdf|max:20480',
-            'destinatario_id' => 'nullable|exists:users,id',
+            'destinatario_id' => 'required|exists:users,id',
             'pdf_path_temp' => 'nullable|string',
             'texto_pdf_temp' => 'nullable|string',
             'resumen_ai_temp' => 'nullable|string'
         ]);
-    
+
         try {
             $data = $request->except('pdf', 'pdf_path_temp', 'texto_pdf_temp', 'resumen_ai_temp');
-            $data['user_id'] = auth()->id(); // Guardamos el ID del creador
-    
-            // Crear la nota primero
+            $data['user_id'] = auth()->id();
+            $data['obra_id'] = $obra ? $obra->id : null;
+
             $nota = Nota::create($data);
-    
-            // Si hay un PDF temporal, procesarlo
+
             if ($request->has('pdf_path_temp') && $request->pdf_path_temp) {
-                $tempPath = $request->pdf_path_temp;
-                $finalFilename = 'nota_' . $nota->id . '.pdf';
-    
-                // Verificar que el archivo temporal exista
-                $tempFilePath = public_path('storage/' . $tempPath);
-                if (file_exists($tempFilePath)) {
-                    // Asegurarse de que la carpeta de destino exista
-                    $destDir = public_path('storage/pdfs');
-                    if (!file_exists($destDir)) {
-                        mkdir($destDir, 0777, true);
-                    }
-    
-                    // Mover el archivo de la ubicación temporal a la final
-                    $finalPath = $destDir . '/' . $finalFilename;
-                    rename($tempFilePath, $finalPath);
-    
-                    // Actualizar la nota con la ruta final del PDF y el texto extraído
-                    $nota->update([
-                        'pdf_path' => 'pdfs/' . $finalFilename,
-                        'texto_pdf' => $request->texto_pdf_temp,
-                        'resumen_ai' => $request->resumen_ai_temp ?? null
-                    ]);
-                }
+                $this->procesarPDFTemporal($request, $nota);
             } elseif ($request->hasFile('pdf')) {
-                // Si se sube un PDF directamente en el formulario
-                $file = $request->file('pdf');
-                $filename = 'nota_' . $nota->id . '.pdf';
-    
-                // Asegurarse de que la carpeta exista
-                $destDir = public_path('storage/pdfs');
-                if (!file_exists($destDir)) {
-                    mkdir($destDir, 0777, true);
-                }
-    
-                // Mover el archivo a la carpeta pública
-                $file->move($destDir, $filename);
-    
-                // Extraer el texto del PDF
-                $textoPDF = $this->extraerTextoDelPDF($destDir . '/' . $filename);
-    
-                $nota->update([
-                    'pdf_path' => 'pdfs/' . $filename,
-                    'texto_pdf' => $textoPDF
-                ]);
+                $this->procesarPDF($request->file('pdf'), $nota);
             }
-    
-            // Enviar notificación si hay un destinatario
-            if ($request->has('destinatario_id') && $request->destinatario_id) {
-                $destinatario = User::find($request->destinatario_id);
-    
-                if ($destinatario) {
-                    try {
-                        // Verificar que el destinatario tenga email
-                        if (empty($destinatario->email)) {
-                            Log::warning("El destinatario no tiene email configurado. ID: {$destinatario->id}");
-                        } else {
-                            // Usar notifyNow para enviar la notificación inmediatamente
-                            $destinatario->notifyNow(new NotaAsignadaNotification($nota, auth()->user()));
-                            Log::info("Notificación de nota asignada enviada a {$destinatario->email} sobre la nota #{$nota->id}");
-                        }
-                    } catch (\Exception $e) {
-                        Log::error("Error al enviar notificación de nota a {$destinatario->email}: " . $e->getMessage());
-                    }
-                }
+
+            if ($obra) {
+                return redirect()->route('obras.notas.index', $obra->id)
+                                 ->with('success', 'Nota creada con éxito.');
+            } else {
+                return redirect()->route('notas.index')
+                                 ->with('success', 'Nota creada con éxito.');
             }
-    
-            // Devolver respuesta JSON para el AJAX
-            return response()->json([
-                'success' => true,
-                'message' => 'Nota creada con éxito.',
-                'redirect' => route('notas.index')
-            ]);
-    
         } catch (\Exception $e) {
             Log::error('Error al crear nota: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear la nota: ' . $e->getMessage()
-            ], 500);
+            return back()->with('error', 'Error al crear la nota: ' . $e->getMessage());
         }
+    }*/
+
+     // app/Http/Controllers/NotaController.php
+public function firmar(Request $request, Obra $obra, Nota $nota)
+{
+    $this->authorize('firmar', $nota);
+
+    $request->validate([
+        'firma' => 'required|string'
+    ]);
+
+    try {
+        $nota->update([
+            'firmado_por' => auth()->id(),
+            'firma_fecha' => now(),
+            'Estado' => 'Firmado'
+        ]);
+
+        // Solo agregar al Libro de Obra si NO es una entrega de ingeniería
+        if ($nota->Tipo != 'ENTREGA') {
+            LibroObra::create([
+                'obra_id' => $obra->id,
+                'documento_type' => Nota::class,
+                'documento_id' => $nota->id,
+                'orden' => LibroObra::where('obra_id', $obra->id)->max('orden') + 1,
+                'fecha_registro' => now()
+            ]);
+        }
+
+        return redirect()->route('obras.notas.show', [$obra->id, $nota->id])
+                         ->with('success', 'Nota firmada ' . ($nota->Tipo == 'ENTREGA' ? '' : 'y agregada al Libro de Obra.'));
+    } catch (\Exception $e) {
+        Log::error('Error al firmar nota: ' . $e->getMessage());
+        return back()->with('error', 'Error al firmar la nota: ' . $e->getMessage());
     }
-    
+}
 
 
-    
-    
+    protected function procesarPDF($file, Nota $nota)
+    {
+        $filename = 'nota_' . $nota->id . '.pdf';
+        $path = $file->storeAs('pdfs/notas', $filename, 'public');
+
+        $parser = new Parser();
+        $pdf = $parser->parseFile($file->getRealPath());
+        $textoPDF = '';
+        foreach ($pdf->getPages() as $page) {
+            $textoPDF .= $page->getText() . "\n\n";
+        }
+
+        $nota->update([
+            'pdf_path' => $path,
+            'texto_pdf' => $textoPDF
+        ]);
+    }
+
 
     public function edit(Nota $nota)
     {

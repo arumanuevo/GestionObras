@@ -23,21 +23,23 @@ class UserController extends Controller
             abort(403, 'No tienes permiso para acceder a esta página');
         }
 
-        $users = User::with('roles')->get();
+        $users = User::with('roles')->paginate(10);
         $roles = Role::all();
 
         return view('users.index', compact('users', 'roles'));
     }
 
     public function create()
-    {
-        if (!auth()->user()->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta página');
-        }
-
-        $roles = Role::all();
-        return view('users.create', compact('roles'));
+{
+    if (!auth()->user()->hasRole('admin')) {
+        abort(403, 'No tienes permiso para acceder a esta página');
     }
+
+    // Solo cargamos los roles de sistema (Admin y User)
+    $roles = Role::whereIn('name', ['admin', 'user'])->get();
+
+    return view('users.create', compact('roles'));
+}
 
     public function store(Request $request)
     {
@@ -45,42 +47,42 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'roles' => 'required|array',
-            'roles.*' => 'exists:roles,id'
+            'role' => 'required|exists:roles,id',
         ]);
-
+    
         try {
             $user = User::create([
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'approved' => false, // El usuario se crea como no aprobado
+                'approved' => false,
             ]);
-
-            // Asignar roles al usuario
-            $user->syncRoles($validated['roles']);
-
-            // Redirigir a la lista de usuarios con mensaje de éxito
+    
+            // Asignar el rol seleccionado
+            $role = Role::find($validated['role']);
+            $user->syncRoles($role->name);
+    
             return redirect()->route('users.index')
                 ->with('success', 'Usuario creado con éxito. El usuario necesita ser aprobado por un administrador.');
-
         } catch (\Exception $e) {
             Log::error('Error al crear usuario: ' . $e->getMessage());
             return back()->with('error', 'Error al crear usuario: ' . $e->getMessage());
         }
     }
-
-    public function edit(User $user)
-    {
-        if (!auth()->user()->hasRole('admin')) {
-            abort(403, 'No tienes permiso para acceder a esta página');
-        }
-
-        $roles = Role::all();
-        $userRoles = $user->roles->pluck('id')->toArray();
-
-        return view('users.edit', compact('user', 'roles', 'userRoles'));
+// app/Http/Controllers/UserController.php
+public function edit(User $user)
+{
+    if (!auth()->user()->hasRole('admin')) {
+        abort(403, 'No tienes permiso para acceder a esta página');
     }
+
+    // Cargar todos los roles del sistema
+    $roles = Role::all();
+
+    return view('users.edit', compact('user', 'roles'));
+}
+
+
 
     /*public function update(Request $request, User $user)
     {
@@ -124,63 +126,55 @@ class UserController extends Controller
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
-    {
-        Log::info('UserController@update - Iniciando actualización para usuario ID: ' . $user->id);
-    
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
-            'role' => 'required|exists:roles,id',
-            'approved' => 'sometimes|boolean',
-        ]);
-    
-        try {
-            $data = [
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'approved' => $request->has('approved'),
-            ];
-    
-            $wasApproved = $user->approved;
-            $isBeingApproved = $request->has('approved') && $validated['approved'];
-    
-            // Si el usuario está siendo aprobado ahora
-            if ($isBeingApproved && !$wasApproved) {
-                $data['approved_by'] = auth()->id();
-                $data['approved_at'] = now();
-                Log::info('UserController@update - Usuario siendo aprobado, ID: ' . $user->id);
-            }
-    
-            $user->update($data);
-    
-            // Asignar el nuevo rol
-            $role = Role::find($validated['role']);
-            $user->syncRoles($role->name);
-    
-            // Si el usuario está siendo aprobado ahora, enviar notificación
-            if ($isBeingApproved && !$wasApproved) {
-                Log::info('UserController@update - Preparando notificación de aprobación para: ' . $user->email);
-    
-                // Verificar si el usuario tiene email
-                if (empty($user->email)) {
-                    Log::error('UserController@update - El usuario no tiene email, ID: ' . $user->id);
-                } else {
-                    Log::info('UserController@update - Enviando notificación de aprobación a: ' . $user->email);
-                    $user->notifyNow(new UserApprovedNotification()); // Usamos notifyNow en lugar de notify
-                    Log::info('UserController@update - Notificación enviada a: ' . $user->email);
-                }
-            }
-    
-            return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
-    
-        } catch (\Exception $e) {
-            Log::error('UserController@update - Error al actualizar usuario ID: ' . $user->id . ' - ' . $e->getMessage());
-            return back()->with('error', 'Error al actualizar usuario: ' . $e->getMessage());
+   // app/Http/Controllers/UserController.php
+public function update(Request $request, User $user)
+{
+    Log::info('UserController@update - Iniciando actualización para usuario ID: ' . $user->id);
+
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,'.$user->id,
+        'role' => 'required|exists:roles,id',
+        'approved' => 'sometimes|boolean',
+    ]);
+
+    try {
+        $data = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'approved' => $request->has('approved'),
+        ];
+
+        $wasApproved = $user->approved;
+        $isBeingApproved = $request->has('approved') && $validated['approved'];
+
+        if ($isBeingApproved && !$wasApproved) {
+            $data['approved_by'] = auth()->id();
+            $data['approved_at'] = now();
+            Log::info('UserController@update - Usuario siendo aprobado, ID: ' . $user->id);
         }
+
+        $user->update($data);
+
+        // Verificar si el usuario actual es admin y está editando su propio perfil
+        $isSelfAdmin = auth()->user()->id === $user->id && $user->hasRole('admin');
+        $newRole = Role::find($validated['role']);
+
+        // Si el usuario es admin y está intentando cambiar su propio rol a user, mantener el rol admin
+        if ($isSelfAdmin && $newRole->name === 'user') {
+            Log::info('UserController@update - Intento de cambiar rol de admin a user bloqueado para usuario ID: ' . $user->id);
+            return redirect()->route('users.index')->with('warning', 'No puedes cambiar tu propio rol de Admin a User para evitar dejar el sistema sin administradores.');
+        }
+
+        // Asignar el nuevo rol
+        $user->syncRoles($newRole->name);
+
+        return redirect()->route('users.index')->with('success', 'Usuario actualizado con éxito.');
+    } catch (\Exception $e) {
+        Log::error('UserController@update - Error al actualizar usuario ID: ' . $user->id . ' - ' . $e->getMessage());
+        return back()->with('error', 'Error al actualizar usuario: ' . $e->getMessage());
     }
-
-
+}
 
 
     public function destroy(User $user)
@@ -233,14 +227,20 @@ class UserController extends Controller
             // Verificar que el usuario no esté ya aprobado
             if ($user->approved) {
                 Log::info('UserController@approve - Usuario ya aprobado, ID: ' . $user->id);
-                return back()->with('info', 'El usuario ya está aprobado.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El usuario ya está aprobado.'
+                ], 200);
             }
     
             // Verificar que el usuario tenga el email verificado
-            if (!$user->hasVerifiedEmail()) {
+            /*if (!$user->hasVerifiedEmail()) {
                 Log::warning('UserController@approve - Email no verificado, ID: ' . $user->id);
-                return back()->with('warning', 'El usuario debe verificar su email antes de ser aprobado.');
-            }
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El usuario debe verificar su email antes de ser aprobado.'
+                ], 400);
+            }*/
     
             // Aprobar el usuario
             $user->update([
@@ -252,15 +252,25 @@ class UserController extends Controller
             Log::info('UserController@approve - Usuario aprobado, ID: ' . $user->id . ', Email: ' . $user->email);
     
             // Enviar notificación de aprobación
-            Log::info('UserController@approve - Enviando notificación a: ' . $user->email);
-            $user->notifyNow(new UserApprovedNotification()); // Usamos notifyNow en lugar de notify
-            Log::info('UserController@approve - Notificación enviada a: ' . $user->email);
+            try {
+                Log::info('UserController@approve - Enviando notificación a: ' . $user->email);
+                $user->notifyNow(new UserApprovedNotification());
+                Log::info('UserController@approve - Notificación enviada a: ' . $user->email);
+            } catch (\Exception $e) {
+                Log::error('UserController@approve - Error al enviar notificación: ' . $e->getMessage());
+            }
     
-            return back()->with('success', 'Usuario aprobado con éxito. Se ha enviado una notificación al usuario.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuario aprobado con éxito. Se ha enviado una notificación al usuario.'
+            ], 200);
     
         } catch (\Exception $e) {
             Log::error('UserController@approve - Error al aprobar usuario ID: ' . $user->id . ' - ' . $e->getMessage());
-            return back()->with('error', 'Error al aprobar usuario: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al aprobar usuario: ' . $e->getMessage()
+            ], 500);
         }
     }
 

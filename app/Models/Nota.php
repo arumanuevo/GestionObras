@@ -1,5 +1,6 @@
 <?php
 
+// app/Models/Nota.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,8 @@ class Nota extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', // Añadimos el campo user_id
+        'obra_id',
+        'user_id',
         'Tipo',
         'Nro',
         'Tema',
@@ -25,37 +27,64 @@ class Nota extends Model
         'pdf_path',
         'resumen_ai',
         'texto_pdf',
-        'destinatario_id'
+        'destinatario_id',
+        'firmado_por',
+        'firma_fecha',
+        'leida',
+        'fecha_lectura'
     ];
 
-    protected $dates = ['fecha', 'created_at', 'updated_at'];
+    protected $dates = ['fecha', 'firma_fecha', 'created_at', 'updated_at'];
 
-    // Mutador para la fecha
+    protected $casts = [
+        'leida' => 'boolean',
+        'fecha_lectura' => 'datetime',
+    ];
+    
+    // Mutadores para las fechas
     public function setFechaAttribute($value)
     {
         $this->attributes['fecha'] = $value ? Carbon::createFromFormat('Y-m-d', $value) : null;
     }
 
-    // Accesor para la fecha
+    public function setFirmaFechaAttribute($value)
+    {
+        $this->attributes['firma_fecha'] = $value ? Carbon::createFromFormat('Y-m-d H:i:s', $value) : null;
+    }
+
+    // Accesores para las fechas
     public function getFechaAttribute($value)
     {
         return $value ? Carbon::parse($value) : null;
     }
 
-    // Relación con el usuario destinatario
+    public function getFirmaFechaAttribute($value)
+    {
+        return $value ? Carbon::parse($value) : null;
+    }
+
+    public function obra()
+    {
+        return $this->belongsTo(Obra::class);
+    }
+
+    public function creador()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function destinatario()
     {
         return $this->belongsTo(User::class, 'destinatario_id');
     }
 
-    // Relación con el creador
-    public function creador()
+    public function libroObra()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->morphOne(LibroObra::class, 'documento');
+    }
+
+    public function ordenServicio()
+    {
+        return $this->hasOne(OrdenServicio::class, 'nota_pedido_id');
     }
 }
-
-
-
-
-

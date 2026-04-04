@@ -28,6 +28,24 @@
                         </div>
                     @endif
 
+                    @if(session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert" style="font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> {{ session('warning') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
+                    @if(session('info'))
+                        <div class="alert alert-info alert-dismissible fade show" role="alert" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle mr-2"></i> {{ session('info') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     <div class="row mb-3 align-items-center">
                         <div class="col-md-8">
                             <div class="input-group input-group-sm">
@@ -53,7 +71,7 @@
                                     <th style="width: 5%; text-align: center; font-size: 0.85rem;">ID</th>
                                     <th style="width: 20%; font-size: 0.85rem;">Nombre</th>
                                     <th style="width: 20%; font-size: 0.85rem;">Email</th>
-                                    <th style="width: 15%; text-align: center; font-size: 0.85rem;">Roles</th>
+                                    <th style="width: 15%; text-align: center; font-size: 0.85rem;">Rol del Sistema</th>
                                     <th style="width: 10%; text-align: center; font-size: 0.85rem;">Estado</th>
                                     <th style="width: 10%; text-align: center; font-size: 0.85rem;">Aprobado</th>
                                     <th style="width: 15%; text-align: center; font-size: 0.85rem;">Acciones</th>
@@ -66,7 +84,13 @@
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <div class="mr-2">
-                                                <i class="fas fa-user-circle text-secondary" style="font-size: 0.9rem;"></i>
+                                                @if($user->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" class="rounded-circle" alt="{{ $user->name }}" style="width: 25px; height: 25px; object-fit: cover;">
+                                                @else
+                                                    <div class="d-flex align-items-center justify-content-center bg-secondary text-white rounded-circle" style="width: 25px; height: 25px; font-size: 0.7rem;">
+                                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                                    </div>
+                                                @endif
                                             </div>
                                             <div>
                                                 <div class="font-weight-bold" style="font-size: 0.85rem;">{{ $user->name }}</div>
@@ -87,19 +111,21 @@
                                         </div>
                                     </td>
                                     <td style="text-align: center; font-size: 0.85rem;">
-                                        @forelse($user->roles as $role)
+                                        @php
+                                            $systemRole = $user->roles->whereIn('name', ['admin', 'user'])->first();
+                                        @endphp
+                                        @if($systemRole)
                                             <span class="badge badge-pill
-                                                @if($role->name == 'admin') badge-danger
-                                                @elseif($role->name == 'editor') badge-primary
+                                                @if($systemRole->name == 'admin') badge-danger
                                                 @else badge-info @endif
                                                 mb-1 d-block" style="font-size: 0.75rem; padding: 0.25em 0.5em;">
-                                                {{ $role->name }}
+                                                {{ ucfirst($systemRole->name) }}
                                             </span>
-                                        @empty
+                                        @else
                                             <span class="badge badge-pill badge-secondary" style="font-size: 0.75rem; padding: 0.25em 0.5em;">
-                                                Sin roles
+                                                User
                                             </span>
-                                        @endforelse
+                                        @endif
                                     </td>
                                     <td style="text-align: center; font-size: 0.85rem;">
                                         @if($user->email_verified_at)
@@ -129,10 +155,10 @@
                                                 <i class="fas fa-edit" style="font-size: 0.8rem;"></i>
                                             </a>
                                             @if(!$user->approved)
-                                                <form action="{{ route('users.approve', $user) }}" method="POST" class="d-inline">
+                                                <form action="{{ route('users.approve', $user) }}" method="POST" class="d-inline approve-form" data-user-id="{{ $user->id }}">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Aprobar usuario" style="width: 30px; height: 30px; padding: 0;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success approve-btn" title="Aprobar usuario" style="width: 30px; height: 30px; padding: 0;">
                                                         <i class="fas fa-check" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 </form>
@@ -157,22 +183,10 @@
                 <!-- /.card-body -->
                 <div class="card-footer clearfix" style="font-size: 0.85rem;">
                     <div class="float-left">
-                        <span>Mostrando {{ $users->count() }} usuarios</span>
+                        <span>Mostrando {{ $users->firstItem() }} a {{ $users->lastItem() }} de {{ $users->total() }} usuarios</span>
                     </div>
                     <div class="float-right">
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-sm m-0">
-                                <li class="page-item disabled">
-                                    <span class="page-link" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">Anterior</span>
-                                </li>
-                                <li class="page-item active">
-                                    <span class="page-link" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">1</span>
-                                </li>
-                                <li class="page-item disabled">
-                                    <span class="page-link" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">Siguiente</span>
-                                </li>
-                            </ul>
-                        </nav>
+                        {{ $users->appends(request()->query())->links('pagination::bootstrap-4') }}
                     </div>
                 </div>
             </div>
@@ -189,6 +203,7 @@
 <script>
 $(document).ready(function() {
     // Inicializar DataTable con configuración personalizada
+    $.fn.dataTable.ext.errMode = 'throw';
     $('#usersTable').DataTable({
         responsive: true,
         autoWidth: false,
@@ -208,6 +223,57 @@ $(document).ready(function() {
     // Funcionalidad de búsqueda personalizada
     $('#searchInput').on('keyup', function() {
         $('#usersTable').DataTable().search(this.value).draw();
+    });
+
+    // Manejar el envío del formulario de aprobación
+    $('.approve-form').on('submit', function(e) {
+        e.preventDefault();
+        var form = $(this);
+        var button = form.find('.approve-btn');
+        var userId = form.data('user-id');
+
+        // Deshabilitar el botón para evitar múltiples envíos
+        button.prop('disabled', true);
+        button.html('<i class="fas fa-spinner fa-spin"></i>');
+
+        // Enviar el formulario mediante AJAX
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+                // Actualizar la interfaz sin recargar la página
+                var row = form.closest('tr');
+                row.find('.badge-danger').removeClass('badge-danger').addClass('badge-success');
+                row.find('.badge-danger i').removeClass('fa-times-circle').addClass('fa-check-circle');
+                row.find('.badge-danger .mr-1').after(' Aprobado');
+
+                // Cambiar el texto del badge
+                row.find('.badge-danger').text(' Aprobado');
+                row.find('.badge-danger').prepend('<i class="fas fa-check-circle mr-1" style="font-size: 0.8rem;"></i>');
+
+                // Eliminar el formulario de aprobación
+                form.remove();
+
+                // Mostrar mensaje de éxito
+                toastr.success('Usuario aprobado con éxito');
+            },
+            error: function(xhr) {
+                // Mostrar mensaje de error
+                var errorMessage = 'Error al aprobar el usuario';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    errorMessage = xhr.responseText;
+                }
+
+                toastr.error(errorMessage);
+
+                // Restaurar el botón
+                button.prop('disabled', false);
+                button.html('<i class="fas fa-check" style="font-size: 0.8rem;"></i>');
+            }
+        });
     });
 });
 </script>
@@ -257,8 +323,11 @@ $(document).ready(function() {
         padding: 0.375rem 0.75rem;
         font-size: 0.85rem;
     }
+    .rounded-circle {
+        border-radius: 50% !important;
+    }
+    .pagination {
+        margin-bottom: 0;
+    }
 </style>
 @endsection
-
-
-

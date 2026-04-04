@@ -245,3 +245,59 @@
 <!-- /.container-fluid -->
 @endsection
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener el input de archivo (que está oculto)
+    const profilePhotoInput = document.getElementById('profile_photo');
+    const profileImage = document.querySelector('.box-profile img');
+
+    // Verificar que los elementos existan
+    if (!profilePhotoInput || !profileImage) {
+        console.error('No se encontraron los elementos necesarios');
+        return;
+    }
+
+    // Escuchar el cambio en el input de archivo
+    profilePhotoInput.addEventListener('change', function(e) {
+        console.log('Evento change detectado'); // Para depuración
+
+        // Verificar si se seleccionó un archivo
+        if (e.target.files && e.target.files[0]) {
+            console.log('Archivo seleccionado:', e.target.files[0].name); // Para depuración
+
+            const reader = new FileReader();
+
+            // Cuando el archivo se cargue
+            reader.onload = function(event) {
+                console.log('Archivo cargado'); // Para depuración
+                // Actualizar la imagen con la vista previa
+                profileImage.src = event.target.result;
+
+                // Remover el ícono de cámara si estaba presente
+                const cameraIcon = document.querySelector('.avatar-upload-indicator-large');
+                if (cameraIcon) {
+                    cameraIcon.style.display = 'none';
+                }
+
+                // Cambiar el texto del botón
+                const uploadButton = document.querySelector('label[for="profile_photo"]');
+                if (uploadButton) {
+                    uploadButton.innerHTML = '<i class="fas fa-camera mr-1"></i> Cambiar Foto';
+                }
+            }
+
+            // Leer el archivo como URL de datos
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // También podemos escuchar el clic en el label para depuración
+    const uploadLabel = document.querySelector('label[for="profile_photo"]');
+    if (uploadLabel) {
+        uploadLabel.addEventListener('click', function() {
+            console.log('Label clickeado'); // Para depuración
+        });
+    }
+});
+</script>
+

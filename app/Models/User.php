@@ -92,4 +92,28 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $this->notify(new CustomResetPasswordNotification($token));
     }
+
+   /* public function obras()
+    {
+        return $this->belongsToMany(Obra::class, 'obra_usuario_rol', 'user_id', 'obra_id')
+                    ->withPivot('rol_id')
+                    ->withTimestamps();
+    }*/
+    public function obras()
+{
+    return $this->belongsToMany(Obra::class, 'obra_user')
+                ->withPivot('rol_id')
+                ->withTimestamps();
+}
+
+    public function rolesEnObra(Obra $obra)
+    {
+        return $this->obras()->where('obra_id', $obra->id)->withPivot('rol_id')->first()->pivot->rol_id;
+    }
+    public function entregasContratistaDestinatario()
+{
+    return $this->belongsToMany(EntregaContratista::class, 'entrega_contratista_destinatarios', 'user_id', 'entrega_id')
+                ->withPivot('recibida', 'fecha_recepcion')
+                ->withTimestamps();
+}
 }
