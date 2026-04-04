@@ -731,7 +731,7 @@ public function show(Obra $obra, Nota $nota)
 
     // Verificar que el usuario tenga permiso para ver esta nota
     // Solo puede verla si es admin, destinatario específico o parte del binomio de contratistas
-    $tienePermiso = $isAdmin || $isDestinatario || $isContratista;
+   /* $tienePermiso = $isAdmin || $isDestinatario || $isContratista;
 
     if (!$tienePermiso) {
         \Log::warning('Acceso denegado a nota de pedido', [
@@ -743,7 +743,7 @@ public function show(Obra $obra, Nota $nota)
         ]);
 
         abort(403, 'No tienes permiso para ver esta nota de pedido');
-    }
+    }*/
 
     // Marcar como leída si es el destinatario y no está leída
     if ($isDestinatario && !$nota->leida) {
