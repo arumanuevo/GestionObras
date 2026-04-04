@@ -89,21 +89,28 @@
                                     </td>
                                     <td>
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
-                                        class="btn btn-outline-primary"
-                                        title="Ver detalles de la nota">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+    <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
+       class="btn btn-outline-primary"
+       title="Ver detalles de la nota">
+        <i class="fas fa-eye"></i>
+    </a>
 
-                                        @if($nota->Estado == 'Pendiente de Firma')
-                                        <form action="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-success" title="Firmar nota">
-                                                <i class="fas fa-signature"></i>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
+    @if($nota->Estado == 'Pendiente de Firma')
+    <button type="button"
+            class="btn btn-outline-success"
+            title="Firmar nota"
+            onclick="event.preventDefault(); document.getElementById('firmar-form-{{ $nota->id }}').submit();">
+        <i class="fas fa-signature"></i>
+    </button>
+
+    <form id="firmar-form-{{ $nota->id }}"
+          action="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}"
+          method="POST"
+          style="display: none;">
+        @csrf
+    </form>
+    @endif
+</div>
                                     </td>
                                 </tr>
                                 @endforeach
