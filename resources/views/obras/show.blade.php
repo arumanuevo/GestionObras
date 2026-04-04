@@ -241,7 +241,7 @@
                                                         <span class="tool-badge">{{ $notasNoLeidas }}</span>
                                                     @endif
                                                 </div>
-                                                <div class="tool-text">Bandeja de Entrada</div>
+                                                <div class="tool-text">Bandeja de Entraddda</div>
                                             </a>
                                         </div>
                                         @endif
