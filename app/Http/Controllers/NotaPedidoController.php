@@ -768,7 +768,7 @@ public function show(Obra $obra, Nota $nota)
 
 public function firmar(Obra $obra, Nota $nota)
 {
-    $this->authorize('firmar', [$obra, $nota]);
+    //$this->authorize('firmar', [$obra, $nota]);
 
     // Verificar que el usuario sea el destinatario
     if (auth()->user()->id != $nota->destinatario_id) {

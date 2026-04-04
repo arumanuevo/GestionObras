@@ -174,13 +174,16 @@
                                 </div>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
-                                        <a href="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}"
-                                           class="btn btn-success">
-                                            <i class="fas fa-signature mr-1"></i> Firmar Nota de Pedido
-                                        </a>
+                                        <!-- Cambiar el enlace por un formulario -->
+                                        <form action="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-signature mr-1"></i> Firmar Nota de Pedido
+                                            </button>
+                                        </form>
 
                                         <a href="{{ route('obras.ordenes-servicio.create_from_np', [$obra->id, $nota->id]) }}"
-                                           class="btn btn-info">
+                                        class="btn btn-info">
                                             <i class="fas fa-file-alt mr-1"></i> Responder con Orden de Servicio
                                         </a>
                                     </div>
