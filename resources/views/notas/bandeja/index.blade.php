@@ -88,21 +88,22 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
-                                               class="btn btn-outline-primary"
-                                               title="Ver detalles de la nota">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
+                                        class="btn btn-outline-primary"
+                                        title="Ver detalles de la nota">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-                                            @if($nota->Estado == 'Pendiente de Firma')
-                                            <a href="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}"
-                                               class="btn btn-outline-success"
-                                               title="Firmar nota">
+                                        @if($nota->Estado == 'Pendiente de Firma')
+                                        <form action="{{ route('obras.notas-pedido.firmar', [$obra->id, $nota->id]) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-success" title="Firmar nota">
                                                 <i class="fas fa-signature"></i>
-                                            </a>
-                                            @endif
-                                        </div>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </div>
                                     </td>
                                 </tr>
                                 @endforeach
