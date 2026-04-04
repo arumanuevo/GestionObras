@@ -14,7 +14,7 @@
                                 <i class="fas fa-edit mr-1"></i> Editar
                             </a>
                             @endif
-                            <a href="{{ route('obras.notas-pedido.index', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
+                            <a href="{{ route('obras.notas.bandeja', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
                                 <i class="fas fa-arrow-left mr-1"></i> Volver al listado
                             </a>
                         </div>
