@@ -44,131 +44,157 @@ class EntregaContratistaController extends Controller
      */
    // app/Http/Controllers/EntregaContratistaController.php
    public function store(Request $request)
-   {
-       // Obtener el ID de la obra desde la URL
-       $obraId = $request->route('obra');
+{
+    // Obtener el ID de la obra desde la URL
+    $obraId = $request->route('obra');
 
-       if (empty($obraId)) {
-           return back()->with('error', 'No se ha especificado una obra válida');
-       }
+    if (empty($obraId)) {
+        return back()->with('error', 'No se ha especificado una obra válida');
+    }
 
-       $obra = Obra::find($obraId);
+    $obra = Obra::find($obraId);
 
-       if (empty($obra)) {
-           return back()->with('error', 'La obra especificada no existe');
-       }
+    if (empty($obra)) {
+        return back()->with('error', 'La obra especificada no existe');
+    }
 
-       // Log de los datos recibidos y del objeto obra
-       \Log::info('Datos recibidos en store:', $request->all());
-       \Log::info('Objeto obra:', ['id' => $obra->id, 'nombre' => $obra->nombre]);
+    // Log de los datos recibidos y del objeto obra
+    \Log::info('Datos recibidos en store:', $request->all());
+    \Log::info('Objeto obra:', ['id' => $obra->id, 'nombre' => $obra->nombre]);
 
-       try {
-           $validated = $request->validate([
-               'numero' => 'required|integer',
-               'asunto' => 'required|string|max:255',
-               'descripcion' => 'required|string',
-               'fecha' => 'required|date',
-               'destinatarios' => 'required|array|min:1',
-               'destinatarios.*' => 'exists:users,id',
-               'tipo_entrega' => 'required|string',
-               'otro_tipo_entrega' => 'nullable|required_if:tipo_entrega,Otro|string|max:255',
-               'plazo_entrega' => 'required|integer|min:1',
-               'prioridad' => 'required|string|in:Normal,Alta,Urgente',
-               'archivos.*' => 'nullable|file|max:10240',
-           ]);
+    try {
+        $validated = $request->validate([
+            'numero' => 'required|integer',
+            'asunto' => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'fecha' => 'required|date',
+            'destinatarios' => 'required|array|min:1',
+            'destinatarios.*' => 'exists:users,id',
+            'tipo_entrega' => 'required|string',
+            'otro_tipo_entrega' => 'nullable|required_if:tipo_entrega,Otro|string|max:255',
+            'plazo_entrega' => 'required|integer|min:1',
+            'prioridad' => 'required|string|in:Normal,Alta,Urgente',
+            'archivos.*' => 'nullable|file|max:10240',
+        ]);
 
-           \Log::info('Validación exitosa:', $validated);
+        \Log::info('Validación exitosa:', $validated);
 
-           DB::beginTransaction();
+        DB::beginTransaction();
 
-           try {
-               // Crear la entrega
-               $entrega = new EntregaContratista();
-               $entrega->obra_id = $obra->id;
-               $entrega->numero = $request->numero;
-               $entrega->asunto = $request->asunto;
-               $entrega->descripcion = $request->descripcion;
-               $entrega->fecha = $request->fecha;
-               $entrega->creador_id = Auth::id();
-               $entrega->tipo_entrega = $request->tipo_entrega === 'Otro' ? $request->otro_tipo_entrega : $request->tipo_entrega;
-               $entrega->plazo_recepcion = $request->plazo_entrega;
-               $entrega->prioridad = $request->prioridad;
-               $entrega->estado = 'Emitida';
+        try {
+            // Verificar que el número de entrega sea único para esta obra
+            $numeroExistente = EntregaContratista::where('obra_id', $obra->id)
+                ->where('numero', $request->numero)
+                ->exists();
 
-               \Log::info('Datos de la entrega antes de guardar:', $entrega->toArray());
+            if ($numeroExistente) {
+                // Si el número ya existe, buscar el próximo número disponible
+                $ultimoNumero = EntregaContratista::where('obra_id', $obra->id)
+                    ->max('numero');
 
-               $entrega->save();
+                $nuevoNumero = $ultimoNumero ? $ultimoNumero + 1 : 1;
 
-               // Asignar destinatarios y enviar emails
-               foreach ($request->destinatarios as $destinatarioId) {
-                   $destinatario = User::find($destinatarioId);
+                \Log::warning('Número de entrega duplicado. Asignando nuevo número:', [
+                    'numero_solicitado' => $request->numero,
+                    'nuevo_numero' => $nuevoNumero
+                ]);
 
-                   // Asignar destinatario
-                   $entrega->destinatarios()->attach($destinatarioId);
+                $validated['numero'] = $nuevoNumero;
+            } else {
+                $nuevoNumero = $request->numero;
+            }
 
-                   // Enviar email si el destinatario tiene email
-                   if ($destinatario && !empty($destinatario->email)) {
-                       try {
-                           Mail::to($destinatario->email)
-                               ->send(new EntregaContratistaCreada($entrega, Auth::user(), $destinatario));
+            // Crear la entrega
+            $entrega = new EntregaContratista();
+            $entrega->obra_id = $obra->id;
+            $entrega->numero = $nuevoNumero;
+            $entrega->asunto = $request->asunto;
+            $entrega->descripcion = $request->descripcion;
+            $entrega->fecha = $request->fecha;
+            $entrega->creador_id = Auth::id();
+            $entrega->tipo_entrega = $request->tipo_entrega === 'Otro' ? $request->otro_tipo_entrega : $request->tipo_entrega;
+            $entrega->plazo_recepcion = $request->plazo_entrega;
+            $entrega->prioridad = $request->prioridad;
+            $entrega->estado = 'Emitida';
 
-                           \Log::info('Email de entrega al contratista enviado a:', [
-                               'destinatario_id' => $destinatario->id,
-                               'destinatario_email' => $destinatario->email,
-                               'entrega_id' => $entrega->id
-                           ]);
-                       } catch (\Exception $e) {
-                           \Log::error('Error al enviar email de entrega al contratista:', [
-                               'error' => $e->getMessage(),
-                               'destinatario_id' => $destinatario->id,
-                               'entrega_id' => $entrega->id
-                           ]);
-                       }
-                   } else {
-                       \Log::warning('No se envió email a destinatario sin email:', [
-                           'destinatario_id' => $destinatarioId,
-                           'entrega_id' => $entrega->id
-                       ]);
-                   }
-               }
+            \Log::info('Datos de la entrega antes de guardar:', $entrega->toArray());
 
-               // Procesar archivos adjuntos
-               if ($request->hasFile('archivos')) {
-                   foreach ($request->file('archivos') as $archivo) {
-                       $nombreOriginal = $archivo->getClientOriginalName();
-                       $nombreArchivo = 'entrega_contratista_' . $entrega->id . '_' . time() . '_' . str_replace(' ', '_', $nombreOriginal);
-                       $ruta = $archivo->storeAs('entregas_contratista', $nombreArchivo, 'public');
+            $entrega->save();
 
-                       $archivoAdjunto = new EntregaContratistaArchivo();
-                       $archivoAdjunto->entrega_id = $entrega->id;
-                       $archivoAdjunto->nombre_original = $nombreOriginal;
-                       $archivoAdjunto->nombre_archivo = $nombreArchivo;
-                       $archivoAdjunto->ruta = $ruta;
-                       $archivoAdjunto->tipo = $archivo->getClientMimeType();
-                       $archivoAdjunto->tamano = $archivo->getSize();
-                       $archivoAdjunto->save();
-                   }
-               }
+            // Asignar destinatarios y enviar emails
+            foreach ($request->destinatarios as $destinatarioId) {
+                $destinatario = User::find($destinatarioId);
 
-               DB::commit();
+                // Asignar destinatario
+                $entrega->destinatarios()->attach($destinatarioId);
 
-               return redirect()->route('obras.entregas-contratista.index', $obra->id)
-                   ->with('success', 'Entrega al contratista enviada con éxito.');
+                // Enviar email si el destinatario tiene email
+                if ($destinatario && !empty($destinatario->email)) {
+                    try {
+                        Mail::to($destinatario->email)
+                            ->send(new EntregaContratistaCreada($entrega, Auth::user(), $destinatario));
 
-           } catch (\Exception $e) {
-               DB::rollBack();
-               \Log::error('Error al guardar la entrega:', ['error' => $e->getMessage()]);
-               return back()->with('error', 'Error al crear la entrega: ' . $e->getMessage());
-           }
-       } catch (\Illuminate\Validation\ValidationException $e) {
-           \Log::error('Error de validación:', ['error' => $e->errors()]);
-           return back()->withErrors($e->errors())->withInput();
-       } catch (\Exception $e) {
-           \Log::error('Error inesperado:', ['error' => $e->getMessage()]);
-           return back()->with('error', 'Error inesperado: ' . $e->getMessage());
-       }
-   }
+                        \Log::info('Email de entrega al contratista enviado a:', [
+                            'destinatario_id' => $destinatario->id,
+                            'destinatario_email' => $destinatario->email,
+                            'entrega_id' => $entrega->id
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('Error al enviar email de entrega al contratista:', [
+                            'error' => $e->getMessage(),
+                            'destinatario_id' => $destinatario->id,
+                            'entrega_id' => $entrega->id
+                        ]);
+                    }
+                } else {
+                    \Log::warning('No se envió email a destinatario sin email:', [
+                        'destinatario_id' => $destinatarioId,
+                        'entrega_id' => $entrega->id
+                    ]);
+                }
+            }
 
+            // Procesar archivos adjuntos
+            if ($request->hasFile('archivos')) {
+                foreach ($request->file('archivos') as $archivo) {
+                    $nombreOriginal = $archivo->getClientOriginalName();
+                    $nombreArchivo = 'entrega_contratista_' . $entrega->id . '_' . time() . '_' . str_replace(' ', '_', $nombreOriginal);
+                    $ruta = $archivo->storeAs('entregas_contratista', $nombreArchivo, 'public');
+
+                    $archivoAdjunto = new EntregaContratistaArchivo();
+                    $archivoAdjunto->entrega_id = $entrega->id;
+                    $archivoAdjunto->nombre_original = $nombreOriginal;
+                    $archivoAdjunto->nombre_archivo = $nombreArchivo;
+                    $archivoAdjunto->ruta = $ruta;
+                    $archivoAdjunto->tipo = $archivo->getClientMimeType();
+                    $archivoAdjunto->tamano = $archivo->getSize();
+                    $archivoAdjunto->save();
+                }
+            }
+
+            DB::commit();
+
+            // Mensaje de éxito con el número de entrega asignado
+            $mensaje = $nuevoNumero == $request->numero
+                ? 'Entrega al contratista enviada con éxito.'
+                : 'Entrega al contratista enviada con éxito. Se asignó el número EC-' . str_pad($nuevoNumero, 4, '0', STR_PAD_LEFT) . ' ya que el número solicitado ya estaba en uso.';
+
+            return redirect()->route('obras.entregas-contratista.index', $obra->id)
+                ->with('success', $mensaje);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al guardar la entrega:', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Error al crear la entrega: ' . $e->getMessage());
+        }
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Error de validación:', ['error' => $e->errors()]);
+        return back()->withErrors($e->errors())->withInput();
+    } catch (\Exception $e) {
+        \Log::error('Error inesperado:', ['error' => $e->getMessage()]);
+        return back()->with('error', 'Error inesperado: ' . $e->getMessage());
+    }
+}
     /**
      * Muestra una lista de las entregas al contratista
      */
@@ -314,10 +340,10 @@ class EntregaContratistaController extends Controller
                 'fecha_recepcion' => now(),
                 'estado' => 'Recibida'
             ]);
-            return redirect()->route('obras.entregas-contratista.show', [$obra->id, $entrega->id])
+            return redirect()->route('obras.entregas-contratista.bandeja', [$obra->id, $entrega->id])
                 ->with('success', 'Entrega recibida con éxito. Todos los destinatarios han recibido la entrega.');
         } else {
-            return redirect()->route('obras.entregas-contratista.show', [$obra->id, $entrega->id])
+            return redirect()->route('obras.entregas-contratista.bandeja', [$obra->id, $entrega->id])
                 ->with('success', 'Entrega marcada como recibida.');
         }
     }

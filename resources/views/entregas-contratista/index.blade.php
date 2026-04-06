@@ -272,6 +272,9 @@
                         $totalEntregasRecibidas = $entregas->where('estado', 'Recibida')->count();
                         $entregasPropias = $entregas->where('creador_id', $user->id);
                         $entregasAjenas = $entregas->where('creador_id', '!=', $user->id);
+
+                        // Obtener todos los usuarios de la obra para optimizar consultas
+                        $usuariosObra = $obra->usuarios->keyBy('id');
                     @endphp
 
                     <div class="alert alert-info alert-entregas mb-4 d-flex align-items-center">
@@ -318,193 +321,193 @@
                             </thead>
                             <tbody>
                             @forelse($entregas as $entrega)
-                            @php
-                                $esPropia = $entrega->creador_id == $user->id;
-                                $creador = $entrega->creador;
+                                @php
+                                    $esPropia = $entrega->creador_id == $user->id;
+                                    $creador = $entrega->creador;
 
-                                // Obtener el rol del creador en la obra
-                                $rolCreador = null;
-                                if ($creador && isset($usuariosObra[$creador->id])) {
-                                    $obraUsuario = $usuariosObra[$creador->id];
-                                    if ($obraUsuario->pivot && $obraUsuario->pivot->rol_id) {
-                                        $rolCreador = \App\Models\RoleObra::find($obraUsuario->pivot->rol_id);
+                                    // Obtener el rol del creador en la obra
+                                    $rolCreador = null;
+                                    if ($creador && isset($usuariosObra[$creador->id])) {
+                                        $obraUsuario = $usuariosObra[$creador->id];
+                                        if ($obraUsuario->pivot && $obraUsuario->pivot->rol_id) {
+                                            $rolCreador = \App\Models\RoleObra::find($obraUsuario->pivot->rol_id);
+                                        }
                                     }
-                                }
 
-                                // Determinar la clase CSS según el rol
-                                $rolClass = 'rol-badge rol-sin-definir';
-                                if ($rolCreador) {
-                                    switch ($rolCreador->nombre) {
-                                        case 'Inspector Principal':
-                                            $rolClass = 'rol-badge rol-inspector';
-                                            break;
-                                        case 'Asistente Inspección':
-                                            $rolClass = 'rol-badge rol-asistente';
-                                            break;
-                                        case 'Jefe de Proyecto':
-                                            $rolClass = 'rol-badge rol-jefe-proyecto';
-                                            break;
-                                        case 'Especialista':
-                                            $rolClass = 'rol-badge rol-especialista';
-                                            break;
-                                        case 'Jefe de Obra':
-                                        case 'Asistente Contratista':
-                                            $rolClass = 'rol-badge rol-contratista';
-                                            break;
-                                        default:
-                                            $rolClass = 'rol-badge rol-sin-definir';
+                                    // Determinar la clase CSS según el rol
+                                    $rolClass = 'rol-badge rol-sin-definir';
+                                    if ($rolCreador) {
+                                        switch ($rolCreador->nombre) {
+                                            case 'Inspector Principal':
+                                                $rolClass = 'rol-badge rol-inspector';
+                                                break;
+                                            case 'Asistente Inspección':
+                                                $rolClass = 'rol-badge rol-asistente';
+                                                break;
+                                            case 'Jefe de Proyecto':
+                                                $rolClass = 'rol-badge rol-jefe-proyecto';
+                                                break;
+                                            case 'Especialista':
+                                                $rolClass = 'rol-badge rol-especialista';
+                                                break;
+                                            case 'Jefe de Obra':
+                                            case 'Asistente Contratista':
+                                                $rolClass = 'rol-badge rol-contratista';
+                                                break;
+                                            default:
+                                                $rolClass = 'rol-badge rol-sin-definir';
+                                        }
                                     }
-                                }
-                            @endphp
-                            <tr class="entrega-card entrega-{{ strtolower($entrega->estado) }} {{ $esPropia ? 'entrega-propia' : 'entrega-ajena' }}">
-                                <td>EC-{{ str_pad($entrega->numero, 4, '0', STR_PAD_LEFT) }}</td>
-                                <td class="td-con-indicador">
-                                    <span class="asunto-text" title="{{ $entrega->asunto }}">{{ Str::limit($entrega->asunto, 30) }}</span>
-                                    <span class="estado-indicador estado-{{ strtolower($entrega->estado) }}" title="{{ $entrega->estado }}"></span>
-                                </td>
-                                <td class="tipo-entrega">
-                                    <i class="fas fa-box-open mr-1"></i> {{ Str::limit($entrega->tipo_entrega, 20) }}
-                                </td>
-                                <td data-order="{{ $entrega->fecha->timestamp }}">
-                                    {{ \Carbon\Carbon::parse($entrega->fecha)->format('d/m/Y') }}
-                                </td>
-                                <td>
-                                    <div class="prioridad-container">
-                                        @if($entrega->prioridad == 'Urgente')
-                                            <i class="fas fa-exclamation-circle prioridad-icon text-danger"></i>
-                                        @elseif($entrega->prioridad == 'Alta')
-                                            <i class="fas fa-exclamation-triangle prioridad-icon text-warning"></i>
-                                        @else
-                                            <i class="fas fa-info-circle prioridad-icon text-info"></i>
-                                        @endif
-                                        <span class="badge badge-prioridad
-                                            @if($entrega->prioridad == 'Urgente') badge-danger
-                                            @elseif($entrega->prioridad == 'Alta') badge-warning
-                                            @else badge-secondary @endif">
-                                            {{ $entrega->prioridad }}
+                                @endphp
+                                <tr class="entrega-card entrega-{{ strtolower($entrega->estado) }} {{ $esPropia ? 'entrega-propia' : 'entrega-ajena' }}">
+                                    <td>EC-{{ str_pad($entrega->numero, 4, '0', STR_PAD_LEFT) }}</td>
+                                    <td class="td-con-indicador">
+                                        <span class="asunto-text" title="{{ $entrega->asunto }}">{{ Str::limit($entrega->asunto, 30) }}</span>
+                                        <span class="estado-indicador estado-{{ strtolower($entrega->estado) }}" title="{{ $entrega->estado }}"></span>
+                                    </td>
+                                    <td class="tipo-entrega">
+                                        <i class="fas fa-box-open mr-1"></i> {{ Str::limit($entrega->tipo_entrega, 20) }}
+                                    </td>
+                                    <td data-order="{{ $entrega->fecha->timestamp }}">
+                                        {{ \Carbon\Carbon::parse($entrega->fecha)->format('d/m/Y') }}
+                                    </td>
+                                    <td>
+                                        <div class="prioridad-container">
+                                            @if($entrega->prioridad == 'Urgente')
+                                                <i class="fas fa-exclamation-circle prioridad-icon text-danger"></i>
+                                            @elseif($entrega->prioridad == 'Alta')
+                                                <i class="fas fa-exclamation-triangle prioridad-icon text-warning"></i>
+                                            @else
+                                                <i class="fas fa-info-circle prioridad-icon text-info"></i>
+                                            @endif
+                                            <span class="badge badge-prioridad
+                                                @if($entrega->prioridad == 'Urgente') badge-danger
+                                                @elseif($entrega->prioridad == 'Alta') badge-warning
+                                                @else badge-secondary @endif">
+                                                {{ $entrega->prioridad }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="estado-{{ strtolower($entrega->estado) }}">
+                                            <i class="fas
+                                                @if($entrega->estado == 'Emitida') fa-paper-plane
+                                                @elseif($entrega->estado == 'Recibida') fa-check-circle
+                                                @else fa-question-circle @endif
+                                                mr-1"></i>
+                                            {{ $entrega->estado }}
                                         </span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="estado-{{ strtolower($entrega->estado) }}">
-                                        <i class="fas
-                                            @if($entrega->estado == 'Emitida') fa-paper-plane
-                                            @elseif($entrega->estado == 'Recibida') fa-check-circle
-                                            @else fa-question-circle @endif
-                                            mr-1"></i>
-                                        {{ $entrega->estado }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        @if($creador && $creador->profile_photo_path)
-                                            <img src="{{ asset('storage/' . $creador->profile_photo_path) }}" class="img-circle elevation-1 mr-2" alt="{{ $creador->name }}" style="width: 25px; height: 25px;">
-                                        @elseif($creador)
-                                            <div class="mr-2 d-flex align-items-center justify-content-center bg-{{ $esPropia ? 'primary' : 'secondary' }} text-white rounded-circle" style="width: 25px; height: 25px; font-size: 0.7rem;">
-                                                {{ strtoupper(substr($creador->name, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                        <div>
-                                            <div class="font-weight-bold">{{ $creador->name ?? 'Desconocido' }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if($creador && $creador->profile_photo_path)
+                                                <img src="{{ asset('storage/' . $creador->profile_photo_path) }}" class="img-circle elevation-1 mr-2" alt="{{ $creador->name }}" style="width: 25px; height: 25px;">
+                                            @elseif($creador)
+                                                <div class="mr-2 d-flex align-items-center justify-content-center bg-{{ $esPropia ? 'primary' : 'secondary' }} text-white rounded-circle" style="width: 25px; height: 25px; font-size: 0.7rem;">
+                                                    {{ strtoupper(substr($creador->name, 0, 1)) }}
+                                                </div>
+                                            @endif
                                             <div>
-                                                @if($rolCreador)
-                                                    <span class="{{ $rolClass }}">
-                                                        {{ $rolCreador->nombre }}
-                                                    </span>
-                                                @else
-                                                    <span class="rol-badge rol-sin-definir">
-                                                        Sin rol definido
-                                                    </span>
-                                                @endif
-                                                @if($esPropia)
-                                                    <span class="badge creador-badge bg-success">Tú</span>
-                                                @endif
+                                                <div class="font-weight-bold">{{ $creador->name ?? 'Desconocido' }}</div>
+                                                <div>
+                                                    @if($rolCreador)
+                                                        <span class="{{ $rolClass }}" title="{{ $rolCreador->nombre }}">
+                                                            {{ $rolCreador->nombre }}
+                                                        </span>
+                                                    @else
+                                                        <span class="rol-badge rol-sin-definir" title="Sin rol definido">
+                                                            Sin rol definido
+                                                        </span>
+                                                    @endif
+                                                    @if($esPropia)
+                                                        <span class="badge creador-badge bg-success">Tú</span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    @forelse($entrega->destinatarios as $destinatario)
-                                        @php
-                                            // Obtener el rol del destinatario en la obra
-                                            $rolDestinatario = null;
-                                            if (isset($usuariosObra[$destinatario->id])) {
-                                                $obraUsuario = $usuariosObra[$destinatario->id];
-                                                if ($obraUsuario->pivot && $obraUsuario->pivot->rol_id) {
-                                                    $rolDestinatario = \App\Models\RoleObra::find($obraUsuario->pivot->rol_id);
+                                    </td>
+                                    <td>
+                                        @forelse($entrega->destinatarios as $destinatario)
+                                            @php
+                                                // Obtener el rol del destinatario en la obra
+                                                $rolDestinatario = null;
+                                                if (isset($usuariosObra[$destinatario->id])) {
+                                                    $obraUsuario = $usuariosObra[$destinatario->id];
+                                                    if ($obraUsuario->pivot && $obraUsuario->pivot->rol_id) {
+                                                        $rolDestinatario = \App\Models\RoleObra::find($obraUsuario->pivot->rol_id);
+                                                    }
                                                 }
-                                            }
 
-                                            // Determinar la clase CSS según el rol del destinatario
-                                            $rolDestClass = 'rol-badge rol-sin-definir';
-                                            if ($rolDestinatario) {
-                                                switch ($rolDestinatario->nombre) {
-                                                    case 'Inspector Principal':
-                                                        $rolDestClass = 'rol-badge rol-inspector';
-                                                        break;
-                                                    case 'Asistente Inspección':
-                                                        $rolDestClass = 'rol-badge rol-asistente';
-                                                        break;
-                                                    case 'Jefe de Proyecto':
-                                                        $rolDestClass = 'rol-badge rol-jefe-proyecto';
-                                                        break;
-                                                    case 'Especialista':
-                                                        $rolDestClass = 'rol-badge rol-especialista';
-                                                        break;
-                                                    case 'Jefe de Obra':
-                                                    case 'Asistente Contratista':
-                                                        $rolDestClass = 'rol-badge rol-contratista';
-                                                        break;
-                                                    default:
-                                                        $rolDestClass = 'rol-badge rol-sin-definir';
+                                                // Determinar la clase CSS según el rol del destinatario
+                                                $rolDestClass = 'rol-badge rol-sin-definir';
+                                                if ($rolDestinatario) {
+                                                    switch ($rolDestinatario->nombre) {
+                                                        case 'Inspector Principal':
+                                                            $rolDestClass = 'rol-badge rol-inspector';
+                                                            break;
+                                                        case 'Asistente Inspección':
+                                                            $rolDestClass = 'rol-badge rol-asistente';
+                                                            break;
+                                                        case 'Jefe de Proyecto':
+                                                            $rolDestClass = 'rol-badge rol-jefe-proyecto';
+                                                            break;
+                                                        case 'Especialista':
+                                                            $rolDestClass = 'rol-badge rol-especialista';
+                                                            break;
+                                                        case 'Jefe de Obra':
+                                                        case 'Asistente Contratista':
+                                                            $rolDestClass = 'rol-badge rol-contratista';
+                                                            break;
+                                                        default:
+                                                            $rolDestClass = 'rol-badge rol-sin-definir';
+                                                    }
                                                 }
-                                            }
-                                        @endphp
-                                        <span class="destinatario-badge" title="{{ $destinatario->name }}">
-                                            {{ strtoupper(substr($destinatario->name, 0, 1)) }}.
-                                            @if($rolDestinatario)
-                                                <span class="{{ $rolDestClass }}" style="font-size: 0.7rem; margin-left: 3px;">
-                                                    {{ strtoupper(substr($rolDestinatario->nombre, 0, 1)) }}
-                                                </span>
+                                            @endphp
+                                            <span class="destinatario-badge" title="{{ $destinatario->name }}">
+                                                {{ strtoupper(substr($destinatario->name, 0, 1)) }}.
+                                                @if($rolDestinatario)
+                                                    <span class="{{ $rolDestClass }}" style="font-size: 0.7rem; margin-left: 3px;">
+                                                        {{ strtoupper(substr($rolDestinatario->nombre, 0, 1)) }}
+                                                    </span>
+                                                @endif
+                                            </span>
+                                        @empty
+                                            <span class="badge badge-secondary">Sin destinatarios</span>
+                                        @endforelse
+                                    </td>
+                                    <td>
+                                        @if($entrega->archivos->count() > 0)
+                                            <span class="badge badge-info">
+                                                <i class="fas fa-paperclip mr-1"></i> {{ $entrega->archivos->count() }}
+                                            </span>
+                                        @else
+                                            <span class="badge badge-secondary">Sin archivos</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex">
+                                            <a href="{{ route('obras.entregas-contratista.show', ['obra' => $obra->id, 'entrega' => $entrega->id]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver entrega">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @if($entrega->estado == 'Emitida' && $esPropia)
+                                            <!-- Botón de edición comentado como en el original -->
                                             @endif
-                                        </span>
-                                    @empty
-                                        <span class="badge badge-secondary">Sin destinatarios</span>
-                                    @endforelse
-                                </td>
-                                <td>
-                                    @if($entrega->archivos->count() > 0)
-                                        <span class="badge badge-info">
-                                            <i class="fas fa-paperclip mr-1"></i> {{ $entrega->archivos->count() }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-secondary">Sin archivos</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="d-flex">
-                                        <a href="{{ route('obras.entregas-contratista.show', ['obra' => $obra->id, 'entrega' => $entrega->id]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver entrega">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        @if($entrega->estado == 'Emitida' && $esPropia)
-                                        <!-- Botón de edición comentado como en el original -->
-                                        @endif
 
-                                        @if($entrega->destinatarios->contains('id', $user->id) && $entrega->estado == 'Emitida')
-                                        <form action="{{ route('obras.entregas-contratista.recibir', [$obra->id, $entrega->id]) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como recibida">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
+                                            @if($entrega->destinatarios->contains('id', $user->id) && $entrega->estado == 'Emitida')
+                                            <form action="{{ route('obras.entregas-contratista.recibir', [$obra->id, $entrega->id]) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-outline-success" title="Marcar como recibida">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            </form>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="10" class="text-center">No hay entregas al contratista registradas para esta obra.</td>
-                            </tr>
+                                <tr>
+                                    <td colspan="10" class="text-center">No hay entregas al contratista registradas para esta obra.</td>
+                                </tr>
                             @endforelse
                             </tbody>
                         </table>

@@ -22,19 +22,15 @@
                             @endphp
 
                             @if($esCreadorDeNotas)
-                                <!--<a href="{{ route('obras.notas-pedido.index', $obra->id) }}" class="btn btn-sm btn-secondary">
+                                <a href="{{ route('obras.notas-pedido.index', $obra->id) }}" class="btn btn-sm btn-secondary">
                                     <i class="fas fa-arrow-left mr-1"></i> Volver a Mis Notas
-                                </a>-->
-                                <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-arrow-left mr-1"></i> Volver
                                 </a>
+                                
                             @else
-                                <!--<a href="{{ route('obras.notas.bandeja', $obra->id) }}" class="btn btn-sm btn-secondary">
+                                <a href="{{ route('obras.notas.bandeja', $obra->id) }}" class="btn btn-sm btn-secondary">
                                     <i class="fas fa-arrow-left mr-1"></i> Volver a Bandeja de Entrada
-                                </a>-->
-                                <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
-                                        <i class="fas fa-arrow-left mr-1"></i> Volver
                                 </a>
+                                
                             @endif
                         </div>
                     </div>

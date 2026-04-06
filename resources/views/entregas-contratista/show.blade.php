@@ -140,9 +140,12 @@
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <h3 class="card-title mb-0">Entrega al Contratista #EC-{{ str_pad($entrega->numero, 4, '0', STR_PAD_LEFT) }}</h3>
                         <div class="card-tools d-flex">
-                            <a href="{{ route('obras.entregas-contratista.bandeja', $obra->id) }}" class="btn btn-sm btn-secondary">
-                                <i class="fas fa-arrow-left mr-1"></i> Volver al listado
+                            <a href="{{ route('obras.entregas-contratista.index', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left mr-1"></i> Volver a la Bandeja
                             </a>
+                            <!--<a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-arrow-left mr-1"></i> Volver
+                            </a>-->
                             @if($entrega->creador_id == auth()->id() && $entrega->estado == 'Emitida')
                             <!-- Botón de edición comentado como en el original -->
                             @endif
@@ -413,9 +416,9 @@
                                         </small>
                                     </div>
                                     <div class="action-buttons">
-                                        <a href="{{ route('obras.entregas-contratista.bandeja', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <!--<a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-arrow-left mr-1"></i> Volver
-                                        </a>
+                                        </a>-->
 
                                         @if($entrega->creador_id == auth()->id() && $entrega->estado == 'Emitida')
                                         <!-- Botón de edición comentado como en el original -->

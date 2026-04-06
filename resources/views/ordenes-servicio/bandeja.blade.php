@@ -173,9 +173,12 @@
                             @endif
                         </div>
                         <div>
-                            <a href="#" onclick="window.history.back(); return false;" class="btn btn-sm btn-secondary">
+                        <a href="{{ route('obras.show', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
+    <i class="fas fa-arrow-left mr-1"></i> Volver a Obra
+</a>
+                            <!--<a href="#" onclick="window.history.back(); return false;" class="btn btn-sm btn-secondary">
                                 <i class="fas fa-arrow-left mr-1"></i>Volver
-                            </a>
+                            </a>-->
                         </div>
                     </div>
                 </div>
@@ -286,9 +289,16 @@
                                         </td>
                                         <td style="text-align: center; vertical-align: middle;">
                                             <div class="acciones-container">
-                                                <a href="{{ route('obras.ordenes-servicio.show', [$obra->id, $orden->id]) }}" class="btn btn-sm btn-outline-primary btn-ver" title="Ver orden">
+                                                <!--<a href="{{ route('obras.ordenes-servicio.show', [$obra->id, $orden->id]) }}" class="btn btn-sm btn-outline-primary btn-ver" title="Ver orden">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
+                                                </a>-->
+
+                                                <a href="{{ route('bandeja-publica.ordenes-servicio.show', [
+            'obra' => $obra->id,
+            'ordenServicio' => $orden->id
+        ]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver orden de servicio">
+            <i class="fas fa-eye"></i>
+        </a>
                                                 @if($orden->Estado == 'Emitida')
                                                 <form action="{{ route('obras.ordenes-servicio.cumplir', [$obra->id, $orden->id]) }}" method="POST" style="display:inline;">
                                                     @csrf

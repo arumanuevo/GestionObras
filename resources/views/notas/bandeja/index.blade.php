@@ -89,11 +89,17 @@
                                     </td>
                                     <td>
                                     <div class="btn-group btn-group-sm" role="group">
-    <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
+                                        <a href="{{ route('bandeja-publica.notas-pedido.show', [
+                                            'obra' => $obra->id,
+                                            'nota' => $nota->id
+                                        ]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver entrega">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+   <!-- <a href="{{ route('obras.notas-pedido.show', [$obra->id, $nota->id]) }}"
        class="btn btn-outline-primary"
        title="Ver detalles de la nota">
         <i class="fas fa-eye"></i>
-    </a>
+    </a>-->
 
     @if($nota->Estado == 'Pendiente de Firma')
     <button type="button"

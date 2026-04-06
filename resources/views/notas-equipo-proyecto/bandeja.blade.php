@@ -331,9 +331,15 @@
                                 </td>
                                 <td>
                                     <div class="d-flex">
-                                        <a href="{{ route('obras.notas-equipo-proyecto.show', [$obra->id, $nota->id]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver nota">
+                                        <!--<a href="{{ route('obras.notas-equipo-proyecto.show', [$obra->id, $nota->id]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver nota">
                                             <i class="fas fa-eye"></i>
-                                        </a>
+                                        </a>-->
+                                        <a href="{{ route('bandeja-publica.notas-equipo-proyecto.show', [
+            'obra' => $obra->id,
+            'nota' => $nota->id
+        ]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver nota equipo">
+            <i class="fas fa-eye"></i>
+        </a>
                                         @if($nota->estado == 'Emitida' && !$leida)
                                         <form action="{{ route('obras.notas-equipo-proyecto.firmar', [$obra->id, $nota->id]) }}" method="POST" class="d-inline">
                                             @csrf

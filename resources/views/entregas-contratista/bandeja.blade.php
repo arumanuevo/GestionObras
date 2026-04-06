@@ -141,6 +141,7 @@
     /* Estilo para el contenedor de la tabla */
     .table-container {
         overflow-x: auto;
+        margin-bottom: 20px;
     }
 
     /* Estilo para el estado de la entrega */
@@ -171,6 +172,17 @@
         font-size: 1.2rem;
         font-weight: bold;
     }
+
+    /* Estilo para centrar el contenido de las celdas de número */
+    .numero-entrega {
+        text-align: center;
+        font-weight: 500;
+    }
+
+    /* Estilo para la paginación */
+    .dataTables_paginate {
+        margin-top: 15px;
+    }
 </style>
 @endsection
 
@@ -181,7 +193,7 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center w-100">
-                        <h3 class="card-title mb-0">Bandeja de Entrada - Entregas del Equipo de Proyecto</h3>
+                        <h3 class="card-title mb-0">Bandeja de Entraddda - Entregas del Equipo de Proyecto</h3>
                         <div class="card-tools d-flex">
                             <a href="{{ route('obras.show', $obra->id) }}" class="btn btn-sm btn-secondary">
                                 <i class="fas fa-arrow-left mr-1"></i> Volver a la obra
@@ -217,11 +229,11 @@
                         </div>
                     </div>
 
-                    <div class="table-responsive">
+                    <div class="table-responsive table-container">
                         <table id="entregasContratistaTable" class="table table-bordered table-hover nowrap" style="width:100%">
                             <thead class="thead-light">
                                 <tr>
-                                    <th data-priority="1">Número</th>
+                                    <th data-priority="1" class="text-center">Número de Entrega</th>
                                     <th data-priority="2">Asunto</th>
                                     <th data-priority="3">Tipo de Entrega</th>
                                     <th data-priority="4">Fecha</th>
@@ -229,7 +241,7 @@
                                     <th data-priority="6">Estado</th>
                                     <th data-priority="7">Remitente</th>
                                     <th data-priority="8">Archivos</th>
-                                    <th data-priority="9" class="no-sort">Acciones</th>
+                                    <th data-priority="9" class="no-sort text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -239,7 +251,9 @@
                                 $recibida = $destinatario ? $destinatario->pivot->recibida : false;
                             @endphp
                             <tr class="entrega-card {{ !$recibida ? 'entrega-no-recibida' : '' }}">
-                                <td>EC-{{ str_pad($entrega->numero, 4, '0', STR_PAD_LEFT) }}</td>
+                                <td class="numero-entrega" data-order="{{ $entrega->numero }}">
+                                    EC-{{ str_pad($entrega->numero, 4, '0', STR_PAD_LEFT) }}
+                                </td>
                                 <td class="td-con-indicador">
                                     <span class="asunto-text" title="{{ $entrega->asunto }}">{{ Str::limit($entrega->asunto, 30) }}</span>
                                     @if(!$recibida)
@@ -300,9 +314,12 @@
                                         <span class="badge badge-info">Sin archivos</span>
                                     @endif
                                 </td>
-                                <td>
-                                    <div class="d-flex">
-                                        <a href="{{ route('obras.entregas-contratista.show', [$obra->id, $entrega->id]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver entrega">
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center">
+                                        <a href="{{ route('bandeja-publica.entregas-contratista.show', [
+                                            'obra' => $obra->id,
+                                            'entrega' => $entrega->id
+                                        ]) }}" class="btn btn-sm btn-outline-primary mr-1 btn-ver" title="Ver entrega">
                                             <i class="fas fa-eye"></i>
                                         </a>
                                         @if($entrega->estado == 'Emitida' && !$recibida)
@@ -349,17 +366,25 @@
 $(document).ready(function() {
     // Configuración de DataTable
     $.fn.dataTable.ext.errMode = 'throw';
-    if ($('#entregasContratistaTable tbody tr').length > 0) {
-        console.log('sisisis');
+
+    @if($entregas->isNotEmpty())
+        // Inicializar DataTable con configuración simplificada
         var table = $('#entregasContratistaTable').DataTable({
-            responsive: {
-                details: {
-                    type: 'column',
-                    target: 'tr'
-                }
-            },
+            responsive: true,
             columnDefs: [
-                { className: 'control', orderable: false, targets: 0 },
+                {
+                    targets: 0, // Columna de Número de Entrega
+                    className: 'text-center',
+                    orderData: [0, 1], // Ordenar por el número real
+                    render: function(data, type, row, meta) {
+                        // Para mostrar en la tabla
+                        if (type === 'display') {
+                            return 'EC-' + String(row.numero).padStart(4, '0');
+                        }
+                        // Para ordenar
+                        return row.numero;
+                    }
+                },
                 { responsivePriority: 1, targets: 0 },
                 { responsivePriority: 2, targets: 1 },
                 { responsivePriority: 3, targets: 2 },
@@ -369,11 +394,15 @@ $(document).ready(function() {
                 { responsivePriority: 7, targets: 6 },
                 { responsivePriority: 8, targets: 7 },
                 { orderable: false, targets: 8 },
-                { className: 'text-center', targets: [0, 3, 4, 5, 7, 8] }
+                { className: 'text-center', targets: [0, 3, 5, 8] }
             ],
             order: [[3, 'desc']], // Ordenar por fecha de forma descendente por defecto
             language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json',
+                paginate: {
+                    previous: '<i class="fas fa-chevron-left">',
+                    next: '<i class="fas fa-chevron-right">'
+                }
             },
             dom: '<"d-flex flex-wrap justify-content-between align-items-center"'
                 +'<"dt-buttons-container"B>'
@@ -382,7 +411,7 @@ $(document).ready(function() {
                 +'rt'
                 +'<"d-flex flex-wrap justify-content-between align-items-center"'
                 +'<"dataTables_info"i>'
-                +'<"dataTables_paginate"p>'
+                +'<"dataTables_paginate mt-3"p>'
                 +'>',
             buttons: [
                 {
@@ -409,7 +438,7 @@ $(document).ready(function() {
                         columns: [0, 1, 2, 3, 4, 5, 6, 7]
                     },
                     customize: function(doc) {
-                        doc.content[1].table.widths = ['10%', '15%', '15%', '10%', '10%', '10%', '15%', '10%', '15%'];
+                        doc.content[1].table.widths = ['12%', '18%', '15%', '10%', '10%', '10%', '15%', '10%', '10%'];
                         doc.styles.tableHeader.alignment = 'center';
                         doc.defaultStyle.alignment = 'center';
                         doc.pageMargins = [20, 20, 20, 20];
@@ -430,6 +459,9 @@ $(document).ready(function() {
                         $(win.document.body).find('h1').css('text-align', 'center');
                         $(win.document.body).find('h1').text('Bandeja de Entrada - Entregas del Equipo de Proyecto');
                         $(win.document.body).find('table').addClass('compact').css('font-size', 'inherit');
+                        $(win.document.body).find('th').css('text-align', 'center');
+                        $(win.document.body).find('td').css('text-align', 'left');
+                        $(win.document.body).find('td:nth-child(1), td:nth-child(4), td:nth-child(6), td:last-child').css('text-align', 'center');
                     }
                 },
                 {
@@ -438,15 +470,23 @@ $(document).ready(function() {
                     className: 'btn btn-sm btn-dt-custom',
                     columns: [0, 1, 2, 3, 4, 5, 6, 7]
                 }
-            ]
+            ],
+            drawCallback: function() {
+                // Reactivar tooltips después de redibujar
+                $('[title="Entrega no recibida"]').tooltip({
+                    title: "Entrega no recibida",
+                    placement: "left",
+                    trigger: "hover",
+                    delay: {"show": 500, "hide": 100}
+                });
+            }
         });
 
-    };
-   
-    // Ajustar el diseño cuando se cambie el tamaño de la ventana
-    $(window).on('resize', function() {
-        table.responsive.recalc();
-    });
+        // Ajustar el diseño cuando se cambie el tamaño de la ventana
+        $(window).on('resize', function() {
+            table.responsive.recalc();
+        });
+    @endif
 
     // Ajustar el estilo del input de búsqueda
     $('.dataTables_filter input').addClass('form-control form-control-sm');
@@ -455,7 +495,7 @@ $(document).ready(function() {
     // Ajustar el estilo del select de longitud
     $('.dataTables_length select').addClass('form-select form-select-sm');
 
-    // Tooltip para los indicadores de entregas no recibidas
+    // Inicializar tooltips
     $('[title="Entrega no recibida"]').tooltip({
         title: "Entrega no recibida",
         placement: "left",

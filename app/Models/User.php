@@ -116,4 +116,14 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->withPivot('recibida', 'fecha_recepcion')
                 ->withTimestamps();
 }
+
+public function getRolEnObra($obraId)
+{
+    $obraUsuarioRol = $this->obraUsuarioRol()->where('obra_id', $obraId)->first();
+    return $obraUsuarioRol ? $obraUsuarioRol->rol : null;
+}
+public function obraUsuarioRol()
+{
+    return $this->hasMany(ObraUsuarioRol::class, 'user_id');
+}
 }

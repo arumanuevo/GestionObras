@@ -124,7 +124,7 @@
                     <div class="d-flex justify-content-between align-items-center w-100">
                         <h3 class="card-title mb-0">Nota al Equipo de Proyecto #NE-{{ str_pad($nota->numero, 4, '0', STR_PAD_LEFT) }}</h3>
                         <div class="card-tools d-flex">
-                            <a href="{{ route('obras.notas-equipo-proyecto.index', $obra->id) }}" class="btn btn-sm btn-secondary">
+                            <a href="{{ route('obras.notas-equipo-proyecto.bandeja', $obra->id) }}" class="btn btn-sm btn-secondary">
                                 <i class="fas fa-arrow-left mr-1"></i> Volver al listado
                             </a>
                             <!--<a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
@@ -391,12 +391,12 @@
                                         </small>
                                     </div>
                                     <div class="action-buttons">
-                                        <!--<a href="{{ route('obras.notas-equipo-proyecto.bandeja', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-arrow-left mr-1"></i> Volver
-                                        </a>-->
-                                        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+                                        <a href="{{ route('obras.notas-equipo-proyecto.bandeja', $obra->id) }}" class="btn btn-sm btn-outline-secondary">
                                             <i class="fas fa-arrow-left mr-1"></i> Volver
                                         </a>
+                                        <!--<a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-arrow-left mr-1"></i> Volver
+                                        </a>-->
 
                                         @if($nota->creador_id == auth()->id() && $nota->estado == 'Emitida')
                                         <a href="{{ route('obras.notas-equipo-proyecto.edit', [$obra->id, $nota->id]) }}" class="btn btn-sm btn-outline-warning">

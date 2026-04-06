@@ -728,7 +728,6 @@
                             <div class="form-group">
                                 <label for="numero_entrega">Número de Entrega</label>
                                 <div class="input-group">
-                                   
                                     @php
                                         $proximoNumeroEntrega = \App\Models\EntregaContratista::where('obra_id', $obra->id)->max('numero') + 1;
                                     @endphp
@@ -830,12 +829,12 @@
                             </div>
 
                             <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="plazo_entrega">Plazo de recepción (días)</label>
-                                    <input type="number" class="form-control" id="plazo_entrega" name="plazo_entrega" min="1" value="{{ old('plazo_entrega', 7) }}" required>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="plazo_entrega">Plazo de recepción (días)</label>
+                                        <input type="number" class="form-control" id="plazo_entrega" name="plazo_entrega" min="1" value="{{ old('plazo_entrega', 7) }}" required>
+                                    </div>
                                 </div>
-                            </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="prioridad_entrega">Prioridad</label>
@@ -859,19 +858,18 @@
                             <div class="form-group">
                                 <label for="archivos_entrega">Adjuntar archivos (opcional)</label>
                                 <div class="custom-file">
-                                    <input type="file" class="custom-file-input" id="archivos_entrega" name="archivos[]" multiple>
-                                    <label class="custom-file-label" for="archivos_entrega">Seleccionar archivos</label>
+                                    <input type="file" class="form-control-file" id="archivos_entrega" name="archivos[]" multiple>
+                                    <small class="form-text text-muted">
+                                        Puedes adjuntar múltiples archivos (PDF, imágenes, documentos).
+                                    </small>
                                 </div>
-                                <small class="form-text text-muted">
-                                    Puedes adjuntar múltiples archivos (PDF, imágenes, documentos).
-                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="btnEnviarEntrega">
                         <i class="fas fa-paper-plane mr-1"></i> Enviar Entrega
                     </button>
                 </div>
@@ -879,6 +877,8 @@
         </div>
     </div>
 </div>
+
+
 <!-- Modal para crear Nota de Pedido -->
 @php
 use App\Models\Nota;
@@ -1293,7 +1293,7 @@ $proximoNumero = Nota::where('obra_id', $obra->id)->where('Tipo', 'NP')->max('Nr
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-primary" id="enviarNotaEquipo">
                         <i class="fas fa-paper-plane mr-1"></i> Enviar Nota
                     </button>
                 </div>
@@ -1582,6 +1582,52 @@ $(document).ready(function() {
         }
 
         return true;
+    });
+
+     // Manejar el cambio en el tipo de entrega
+    $('#tipo_entrega').change(function() {
+        if ($(this).val() === 'Otro') {
+            $('#otro_tipo_entrega_group').show();
+            $('#otro_tipo_entrega').prop('required', true);
+        } else {
+            $('#otro_tipo_entrega_group').hide();
+            $('#otro_tipo_entrega').prop('required', false);
+        }
+    });
+
+    // Manejar el envío del formulario para deshabilitar el botón
+    $('#entregaContratistaForm').on('submit', function() {
+        
+        // Deshabilitar el botón de envío para evitar múltiples envíos
+        $('#btnEnviarEntrega').prop('disabled', true);
+        $('#btnEnviarEntrega').html('<i class="fas fa-spinner fa-spin mr-1"></i> Enviando...');
+
+        // Mostrar un mensaje de confirmación
+        //toastr.info('La entrega está siendo procesada. Por favor, espere...', 'Enviando');
+    });
+    $('#notaPedidoForm').on('submit', function() {
+        
+        // Deshabilitar el botón de envío para evitar múltiples envíos
+        $('#guardarNotaBtn').prop('disabled', true);
+        $('#guardarNotaBtn').html('<i class="fas fa-spinner fa-spin mr-1"></i> Enviando...');
+
+        // Mostrar un mensaje de confirmación
+        //toastr.info('La entrega está siendo procesada. Por favor, espere...', 'Enviando');
+    });
+    $('#notaEquipoProyectoForm').on('submit', function() {
+        
+        // Deshabilitar el botón de envío para evitar múltiples envíos
+        $('#enviarNotaEquipo').prop('disabled', true);
+        $('#enviarNotaEquipo').html('<i class="fas fa-spinner fa-spin mr-1"></i> Enviando...');
+
+        // Mostrar un mensaje de confirmación
+        //toastr.info('La entrega está siendo procesada. Por favor, espere...', 'Enviando');
+    });
+
+    // Inicializar el custom file input
+    $('.custom-file-input').on('change', function() {
+        let fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').addClass("selected").html(fileName);
     });
     // Mostrar notificación de éxito si existe
     @if(session('success'))

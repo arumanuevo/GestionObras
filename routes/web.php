@@ -13,6 +13,7 @@ use App\Http\Controllers\NotaPedidoController;
 use App\Http\Controllers\LibroObraController;
 use App\Http\Controllers\NotaEquipoProyectoController;
 use App\Http\Controllers\EntregaContratistaController;
+use App\Http\Controllers\BandejaPublicaController;
 
 // Ruta principal
 Route::get('/', function () {
@@ -143,10 +144,32 @@ Route::middleware(['auth', 'approved'])->group(function () {
         Route::put('/entregas-contratista/{entrega}', [EntregaContratistaController::class, 'update'])->name('obras.entregas-contratista.update');
         Route::post('/entregas-contratista/{entrega}/recibir', [EntregaContratistaController::class, 'recibir'])->name('obras.entregas-contratista.recibir');
         Route::get('/bandeja-entregas-contratista', [EntregaContratistaController::class, 'bandeja'])->name('obras.entregas-contratista.bandeja');
+
+       
     
     });
 
-        // RUTAS PARA ENTREGAS AL CONTRATISTA (corregidas)
+    // =============================================
+    // RUTAS PARA BANDEJA PÚBLICA (corregidas)
+    // =============================================
+    // Estas rutas NO deben estar dentro del prefijo obras/{obra}
+    // porque ya tienen su propio prefijo y parámetros
+
+    // Notas de Pedido
+    Route::get('/bandeja-publica/obras/{obra}/notas-pedido/{nota}', [BandejaPublicaController::class, 'notaPedido'])
+        ->name('bandeja-publica.notas-pedido.show');
+
+    // Notas al Equipo de Proyecto
+    Route::get('/bandeja-publica/obras/{obra}/notas-equipo-proyecto/{nota}', [BandejaPublicaController::class, 'notaEquipo'])
+        ->name('bandeja-publica.notas-equipo-proyecto.show');
+
+    // Entregas al Contratista
+    Route::get('/bandeja-publica/obras/{obra}/entregas-contratista/{entrega}', [BandejaPublicaController::class, 'entregaContratista'])
+        ->name('bandeja-publica.entregas-contratista.show');
+        
+    // Órdenes de Servicio
+    Route::get('/bandeja-publica/obras/{obra}/ordenes-servicio/{ordenServicio}', [BandejaPublicaController::class, 'ordenServicio'])
+        ->name('bandeja-publica.ordenes-servicio.show');
    
     
 });
